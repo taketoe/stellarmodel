@@ -1,1 +1,0 @@
-/usr/bin/clang++ -g -arch x86_64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/steller.dir/src/main.cpp.o CMakeFiles/steller.dir/src/StellerModel.cpp.o -o steller 
