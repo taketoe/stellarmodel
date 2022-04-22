@@ -1,14 +1,14 @@
-#include "StellerModel.h"
+#include "StellarModel.h"
 
 int main(){
-	Steller steller(1.0);
-	steller.SetLogOut(true);
-	steller.Calc();
-	steller.getResult();
-	steller.Plot();
+	Stellar stellar(1.0);
+	stellar.SetLogOut(true);
+	stellar.Calc();
+	stellar.getResult();
+	stellar.Plot();
 
-	Steller steller2(10.);
-	steller2.SetLogOut(true);
-	steller2.Calc();
+	Stellar stellar2(10.);
+	stellar2.SetLogOut(false);
+	stellar2.Calc();
 
 }

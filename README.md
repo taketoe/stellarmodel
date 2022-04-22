@@ -1,1 +1,3 @@
-# stellermodel
+# stellarmodel
+
+Astorphysical Stellar Model
