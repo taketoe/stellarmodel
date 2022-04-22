@@ -91,14 +91,3 @@ public:
 	void getResult();
 	void Plot();
 };
-
-class StellarModel
-{
-private:
-public:
-	StellarModel(/* args */);
-	~StellarModel();
-	void Calc();
-	bool CheckConverge(Phys,Phys);
-	void Plot();
-};
