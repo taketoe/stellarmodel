@@ -1,4 +1,4 @@
-#include "StellarModel.h"
+#include "Stellar.h"
 
 int main(){
 	Stellar stellar(1.0);

@@ -1,5 +1,5 @@
 
-#include "StellarModel.h"
+#include "Stellar.h"
 
 Phys::Phys(){}
 
