@@ -3,11 +3,15 @@
 #include <iomanip>
 #include <math.h>
 #include <array>
+#include "matplotlibcpp.h"
+namespace plt = matplotlibcpp;
+
 using namespace std;
 
 #include <Eigen/Dense>
 #include <Eigen/LU>
 using namespace Eigen;
+
 
 const double Pi=3.141592;
 const double G=6.67E-11;      // Gravitational constant
@@ -23,7 +27,7 @@ const double Lsun=3.828E26;   // Solar luminosity
 
 const double con_fact=0.3;	//????
 
-const double tolerance=5.E-3;// convergence criteria
+const double tolerance=5.E-4;// convergence criteria
 const int Ndim=10000;// Number of grid points
 
 class Phys

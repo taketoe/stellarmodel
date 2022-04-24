@@ -137,7 +137,8 @@ void Stellar::SetInnerBoundary(){
 
 Phys Stellar::ShootIn(){
 	double nabla_rad;
-	for(int j=Ndim-2;j>=int(Ndim/2)-2;j--){
+//	for(int j=Ndim-2;j>=int(Ndim/2)-1;j--){
+	for(int j=Ndim-2;j>=int(Ndim/2)-1;j--){
 			R[j] = R[j+1] - dM/(4.*Pi*pow(R[j+1],2)*rho[j+1]);
 			P[j] = P[j+1] + dM*G*M[j+1]/(4.*Pi*pow(R[j+1],4));
 			L[j] = L[j+1] - dM*epsilon[j+1];
@@ -185,7 +186,7 @@ void Stellar::SetOuterBoundary(){
 
 Phys Stellar::ShootOut(){
 	double nabla_rad;
-	for(int i=1;i<=int(Ndim/2);i++){
+	for(int i=1;i<=int(Ndim/2)-1;i++){
 		R[i] = R[i-1] + dM/(4.*Pi*pow(R[i-1],2)*rho[i-1]);
 		P[i] = P[i-1] - dM*G*M[i-1]/(4.*Pi*pow(R[i-1],4));
 		L[i] = L[i-1] + dM*epsilon[i-1];
@@ -280,102 +281,87 @@ void Stellar::Calc(){
 	Phys physDiff0,physDiff1,physDiff2,physDiff3,physDiff4;
 	Phys phys_dPc,phys_dTc,phys_dRs,phys_dLs;
 	bool converge = false;
-	while(!converge){
+	int i = 0, iEnd = 100;
+	while(!converge && i<iEnd){
 		SetOuterBoundary();
 		SetInnerBoundary();
-		Phys physMidI=ShootIn();//OK
-		Phys physMidO=ShootOut();//OK
-		// physMidI.Out();
-		// physMidO.Out();
+		Phys physMidI=ShootIn();
+		Phys physMidO=ShootOut();
 		converge = CheckConverge(physMidI,physMidO);
-		SetPerturbPc();
-		physMidOp1=ShootOut();
-		SetPerturbTc();
-		physMidOp2=ShootOut();
-		SetPerturbLs();
-		physMidIp1=ShootIn();
-		SetPerturbRs();
-		physMidIp2=ShootIn();
-		// physMidOp1.Out();	
-		// physMidOp2.Out();	
-		// physMidIp1.Out();	
-		// physMidIp2.Out();	
+		if(!converge){
+			SetPerturbPc();
+			physMidOp1=ShootOut();
+			SetPerturbTc();
+			physMidOp2=ShootOut();
+			SetPerturbLs();
+			physMidIp1=ShootIn();
+			SetPerturbRs();
+			physMidIp2=ShootIn();
 
-		physDiff0 = physMidO - physMidI;
-		physDiff1 = physMidOp1 - physMidI;//Rmid1-R2mid0
-		physDiff2 = physMidOp2 - physMidI;//Rmid2-R2mid0
-		physDiff3 = physMidO - physMidIp1;//Rmid0-R2mid1
-		physDiff4 = physMidO - physMidIp2;//Rmid0-R2mid2
+			physDiff0 = physMidO - physMidI;
+			physDiff1 = physMidOp1 - physMidI;
+			physDiff2 = physMidOp2 - physMidI;
+			physDiff3 = physMidO - physMidIp1;
+			physDiff4 = physMidO - physMidIp2;
 
-		phys_dPc = physDiff1 - physDiff0;
-		phys_dTc = physDiff2 - physDiff0;
-		phys_dLs = physDiff3 - physDiff0;
-		phys_dRs = physDiff4 - physDiff0;
+			phys_dPc = physDiff1 - physDiff0;
+			phys_dTc = physDiff2 - physDiff0;
+			phys_dLs = physDiff3 - physDiff0;
+			phys_dRs = physDiff4 - physDiff0;
 
-		d_deltaR_dPc = phys_dPc.getR() / (0.01*getPc());
-		d_deltaR_dTc = phys_dTc.getR() / (0.01*getTc());
-		d_deltaR_dLs = phys_dLs.getR() / (0.01*getLs());
-		d_deltaR_dRs = phys_dRs.getR() / (0.01*getRs());
+			d_deltaR_dPc = phys_dPc.getR() / (0.01*getPc());
+			d_deltaR_dTc = phys_dTc.getR() / (0.01*getTc());
+			d_deltaR_dLs = phys_dLs.getR() / (0.01*getLs());
+			d_deltaR_dRs = phys_dRs.getR() / (0.01*getRs());
 
-		d_deltaP_dPc = phys_dPc.getP() / (0.01*getPc());
-		d_deltaP_dTc = phys_dTc.getP() / (0.01*getTc());
-		d_deltaP_dLs = phys_dLs.getP() / (0.01*getLs());
-		d_deltaP_dRs = phys_dRs.getP() / (0.01*getRs());
+			d_deltaP_dPc = phys_dPc.getP() / (0.01*getPc());
+			d_deltaP_dTc = phys_dTc.getP() / (0.01*getTc());
+			d_deltaP_dLs = phys_dLs.getP() / (0.01*getLs());
+			d_deltaP_dRs = phys_dRs.getP() / (0.01*getRs());
 
-		d_deltaT_dPc = phys_dPc.getT() / (0.01*getPc());
-		d_deltaT_dTc = phys_dTc.getT() / (0.01*getTc());
-		d_deltaT_dLs = phys_dLs.getT() / (0.01*getLs());
-		d_deltaT_dRs = phys_dRs.getT() / (0.01*getRs());
+			d_deltaT_dPc = phys_dPc.getT() / (0.01*getPc());
+			d_deltaT_dTc = phys_dTc.getT() / (0.01*getTc());
+			d_deltaT_dLs = phys_dLs.getT() / (0.01*getLs());
+			d_deltaT_dRs = phys_dRs.getT() / (0.01*getRs());
 
-		d_deltaL_dPc = phys_dPc.getL() / (0.01*getPc());
-		d_deltaL_dTc = phys_dTc.getL() / (0.01*getTc());
-		d_deltaL_dLs = phys_dLs.getL() / (0.01*getLs());
-		d_deltaL_dRs = phys_dRs.getL() / (0.01*getRs());
+			d_deltaL_dPc = phys_dPc.getL() / (0.01*getPc());
+			d_deltaL_dTc = phys_dTc.getL() / (0.01*getTc());
+			d_deltaL_dLs = phys_dLs.getL() / (0.01*getLs());
+			d_deltaL_dRs = phys_dRs.getL() / (0.01*getRs());
 
-		MatrixXd A(4,4);
-		A(0,0)=d_deltaR_dPc;
-		A(0,1)=d_deltaR_dTc;
-		A(0,2)=d_deltaR_dLs;
-		A(0,3)=d_deltaR_dRs;
-		A(1,0)=d_deltaP_dPc;
-		A(1,1)=d_deltaP_dTc;
-		A(1,2)=d_deltaP_dLs;
-		A(1,3)=d_deltaP_dRs;
-		A(2,0)=d_deltaT_dPc;
-		A(2,1)=d_deltaT_dTc;
-		A(2,2)=d_deltaT_dLs;
-		A(2,3)=d_deltaT_dRs;
-		A(3,0)=d_deltaL_dPc;
-		A(3,1)=d_deltaL_dTc;
-		A(3,2)=d_deltaL_dLs;
-		A(3,3)=d_deltaL_dRs;
+			MatrixXd A(4,4);
+			A(0,0)=d_deltaR_dPc;
+			A(0,1)=d_deltaR_dTc;
+			A(0,2)=d_deltaR_dLs;
+			A(0,3)=d_deltaR_dRs;
+			A(1,0)=d_deltaP_dPc;
+			A(1,1)=d_deltaP_dTc;
+			A(1,2)=d_deltaP_dLs;
+			A(1,3)=d_deltaP_dRs;
+			A(2,0)=d_deltaT_dPc;
+			A(2,1)=d_deltaT_dTc;
+			A(2,2)=d_deltaT_dLs;
+			A(2,3)=d_deltaT_dRs;
+			A(3,0)=d_deltaL_dPc;
+			A(3,1)=d_deltaL_dTc;
+			A(3,2)=d_deltaL_dLs;
+			A(3,3)=d_deltaL_dRs;
 
-		VectorXd x(4),y(4);
-		y(0)=con_fact*physDiff0.getR();
-		y(1)=con_fact*physDiff0.getP();
-		y(2)=con_fact*physDiff0.getT();
-		y(3)=con_fact*physDiff0.getL();
+			VectorXd x(4),y(4);
+			y(0)=con_fact*physDiff0.getR();
+			y(1)=con_fact*physDiff0.getP();
+			y(2)=con_fact*physDiff0.getT();
+			y(3)=con_fact*physDiff0.getL();
 
-		x = A.inverse()*y;
+			x = A.inverse()*y;
 
-		// cout << "y" << endl;
-		// cout << y.transpose() << endl;
-		// cout << "A="<<endl;
-		// cout << A << endl;
-		// cout << "A^-1="<<endl;
-		// cout << A.inverse() << endl;
-		// cout << (A.inverse()*y).transpose() << endl;
-
-		setPc(getPc()-x[0]);
-		setTc(getTc()-x[1]);
-		setLs(getLs()-x[2]);
-		setRs(getRs()-x[3]);
+			setPc(getPc()-x[0]);
+			setTc(getTc()-x[1]);
+			setLs(getLs()-x[2]);
+			setRs(getRs()-x[3]);
+		}
+		i++;
 	}
-
-	Phys physSurface = getPhys(Ndim-2);
-	Phys physCenter  = getPhys(0);
-	//physSurface.Out();
-	//physCenter.Out();
 }
 
 bool Stellar::CheckConverge(Phys phys1,Phys phys2){
@@ -387,7 +373,7 @@ bool Stellar::CheckConverge(Phys phys1,Phys phys2){
 	Ldiff = phys1.getL() - phys2.getL();
 	Rmidpoint = (phys1.getR() + phys2.getR())/2.;
 	Pmidpoint = (phys1.getP() + phys2.getP())/2.;
-	Tmidpoint = (phys1.getT() + phys2.getP())/2.;
+	Tmidpoint = (phys1.getT() + phys2.getT())/2.;
 	Lmidpoint = (phys1.getL() + phys2.getL())/2.;
 	if(logOut){
 		cout <<"**************************************"<<endl;
@@ -398,6 +384,8 @@ bool Stellar::CheckConverge(Phys phys1,Phys phys2){
 		cout <<" Tdiff/Tmidpoint="<<abs(Tdiff)/Tmidpoint;
 		cout <<" Ldiff)/Lmidpoint="<<abs(Ldiff)/Lmidpoint<<endl;
 		cout <<"**************************************"<<endl;
+		phys1.Out();
+		phys2.Out();
 	}
 	if(abs(Rdiff)/Rmidpoint < tolerance &&
 		abs(Pdiff)/Pmidpoint < tolerance &&
@@ -422,4 +410,54 @@ void Stellar::getResult(){
 	physSurface.Out(); 
 }
 
-void Stellar::Plot(){}
+void Stellar::Plot(){
+	std::array<double,Ndim> Mmodel,Rmodel,Pmodel,Tmodel,Lmodel,rhomodel;
+
+  	//plt::figure();
+//	plt::figure_size(8,8);
+	plt::figure_size(1000,600);
+	plt::subplot(2,3,1);
+	plt::plot(M,T,"r-");
+	plt::ylim(*min_element(T.begin(),T.end()),*max_element(T.begin(),T.end()));
+	plt::title("Temperature vs M");
+	plt::xlabel("M [kg]");
+	plt::ylabel("T [K]");
+	
+	plt::subplot(2,3,2);
+	plt::plot(M,P,"r-");
+	plt::ylim(*min_element(P.begin(),P.end()),*max_element(P.begin(),P.end()));
+	plt::title("Pressure vs M");
+	plt::xlabel("M [kg]");
+	plt::ylabel("P [N/m$^2$]");
+
+	plt::subplot(2,3,3);
+	plt::plot(M,rho,"r-");
+	plt::ylim(*min_element(rho.begin(),rho.end()),*max_element(rho.begin(),rho.end()));
+	plt::title("Density vs M");
+	plt::xlabel("M [kg]");
+	plt::ylabel("$\\rho \\rm [kg/m^3]$");
+
+	plt::subplot(2,3,4);
+	plt::plot(M,L,"r-");
+	plt::ylim(0.,1.1*(*max_element(L.begin(),L.end())));
+	plt::title("Luminosity vs M");
+	plt::xlabel("M [kg]");
+	plt::ylabel("$L \\rm [W]$");
+
+	plt::subplot(2,3,5);
+	plt::plot(M,R,"r-");
+	plt::ylim(*min_element(R.begin(),R.end()),*max_element(R.begin(),R.end()));
+	plt::title("Radius vs M");
+	plt::xlabel("M [kg]");
+	plt::ylabel("$R \\rm[m]$");
+
+	plt::subplot(2,3,6);
+	plt::plot(R,T,"r-");
+	plt::ylim(*min_element(T.begin(),T.end()),*max_element(T.begin(),T.end()));
+	plt::title("Temperature vs Radius");
+	plt::ylabel("T [K]");
+	plt::xlabel("$R \\rm[m]$");
+	plt::tight_layout();
+	plt::show();
+
+}
