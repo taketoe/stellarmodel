@@ -1,4 +1,4 @@
-# Stellar Model Numerical Calsulation Code
+# Stellar Model Numerical Calculation Code
 ## Overview
  This package povides numerical calculation codes of stellar interia model. You can calculate 
 
