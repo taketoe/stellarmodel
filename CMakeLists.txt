@@ -15,7 +15,12 @@ link_libraries("python3.10")
 
 add_executable(stellar src/main.cpp src/Stellar.cpp src/Stellar.h)
 #add_executable(stellar src/main.cpp)
-add_executable(interia example/interia.cpp src/Stellar.cpp src/Stellar.h)
+add_executable(sun example/sun.cpp src/Stellar.cpp src/Stellar.h)
+add_executable(sun10 example/sun10.cpp src/Stellar.cpp src/Stellar.h)
+add_executable(sun80 example/sun80.cpp src/Stellar.cpp src/Stellar.h)
+add_executable(sun10_100 example/sun10_100.cpp src/Stellar.cpp src/Stellar.h)
+add_executable(energy_gen example/energy_gen.cpp src/Stellar.cpp src/Stellar.h)
+set(CMAKE_CXX_FLAGS "-O4")
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

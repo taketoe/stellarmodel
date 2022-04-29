@@ -68,26 +68,25 @@ Stellar::Stellar(double mstarFact,double x,double y, double z):logOut(false){
 
 void Stellar::setParameters(double mstarFact,double x,double y, double z){
 	mstar_fact = mstarFact;
+	X=x;Y=y;Z=z;
+
 	Mstar=double(mstar_fact)*Msun;
-//	cout << Msun << endl;
 	if (Mstar < 1.66*Msun){
 		Rstar=Rsun*1.06*pow((Mstar/Msun),0.945);
 	}
 	else{
 		Rstar=Rsun*1.33*pow((Mstar/Msun),0.555);
 	}
-	X=x;Y=y;Z=z;
-	//cout << X << endl;
 	mu=1./(2.*X+0.75*Y+0.5*Z);
-	epsilon_pp=2.6E-37*pow(X,2);
-	//epsilon_CNO=7.9E-118*X*Z;//???
-	//epsilon_CNO=8.24E-24*X*Z;//???
-	epsilon_CNO=0.;
+	epsilon_pp=2.6E-37*pow(X,2);//Constant for PP-chain energy generation
+	epsilon_CNO=0.;//Constant for CNO-cycle energy generation
+	//epsilon_CNO=7.9E-118*X*Z;//
+	//epsilon_CNO=8.24E-24*X*Z;//
 	kappa0=4.3E24*Z*(X+1);
 
 	M[0]=1.E-06*Mstar;        		// Mass of inner cell
 	dM=(Mstar-M[0])/(double(Ndim-1)); 		// Mass of each mass shell
-	Pc=2.5E16;                 		// Initial guess for central pressure
+	Pc=1.E15;                 		// Initial guess for central pressure
 	Tc=1.E7*pow((Mstar/Msun),0.5); 	// Initial guess for centraltemperature
 
 	Ts=1000.;                 		// Surface temperature; input value
@@ -128,43 +127,6 @@ void Stellar::setInnerBoundary(){
 	kappa[0]=kappa0*rho[0]*pow(T[0],-3.5);
 }
 
-Phys Stellar::shootIn(){
-	double nabla_rad;
-//	for(int j=Ndim-2;j>=int(Ndim/2)-1;j--){
-	for(long j=Ndim-2;j>=long(Ndim/2)-1;j--){
-			R[j] = R[j+1] - dM/(4.*Pi*pow(R[j+1],2)*rho[j+1]);
-			P[j] = P[j+1] + dM*G*M[j+1]/(4.*Pi*pow(R[j+1],4));
-			L[j] = L[j+1] - dM*epsilon[j+1];
-			//cout << "L[j]:" << L[j] << " " << L[j+1]<< endl;
-			nabla_rad = (3.*kappa[j+1]*L[j+1]*P[j+1]/
-				(16.*Pi*a*c*pow(T[j+1],4)*G*M[j+1]));
-			if(nabla_rad < (gamma_c-1.)/gamma_c){
-				T[j] = T[j+1] + (dM*3.*kappa[j+1]*L[j+1]/
-				(16.*Pi*a*c*pow(R[j+1],2)*pow(T[j+1],3))/(4.*Pi*pow(R[j+1],2)));
-			}else{
-				T[j] = T[j+1] - (dM*(gamma_c-1.)/gamma_c*
-				T[j+1]/P[j+1]*(P[j+1] - P[j])/dM);
-			}
-			//********************************************************
-			// Check that we don't overshoot so that either the radius 
-			// or luminosity become negative
-			//********************************************************
-			if(R[j] <= 0. or L[j] <= 0.){
-				cout<<"R[j] <= 0. or L[j] <= 0." << endl;
-				outNumberOfIterate();
-				cout << " j:"<<j<<" R[j]:"<<R[j]<<" L[j]:"<<L[j]<<endl;
-				exit(0);
-			}
-			M[j] = M[j+1] - dM;
-			rho[j] = P[j]*mu*m_H/(kB*T[j]);
-			epsilon[j] = (epsilon_pp*rho[j]*pow(T[j],4.)+
-					epsilon_CNO*rho[j]*pow((T[j]/1.E6),16));
-			kappa[j] = kappa0*rho[j]*pow(T[j],-3.5);
-	}
-	long mid = long(Ndim/2)-1;
-	return Phys(M[mid],R[mid],P[mid],T[mid],L[mid],rho[mid],kappa[mid],epsilon[mid]);
-}
-
 void Stellar::setOuterBoundary(){
 	M[Ndim-1]=Mstar;
 	L[Ndim-1]=Ls;
@@ -182,11 +144,53 @@ void Stellar::setOuterBoundary(){
 	//*****************************************
 	double dr_Rstar = dM/(4.*Pi*pow(R[Ndim-1],3)*rho[Ndim-1]);
 	if(dr_Rstar/Rs > 1.E-02){
-		cout << "Ending run since radial step size is too large"<<endl;
-		cout << "dr_Rstar/Rs="<< dr_Rstar/Rs << " " << dr_Rstar << "  " << Rs<< endl;
-		exit(0);
+		if(logOut){
+			cout << "Ending run since radial step size is too large"<<endl;
+			cout << "dr_Rstar/Rs="<< dr_Rstar/Rs << " " << dr_Rstar << "  " << Rs<< endl;
+		}
+		throw e_state::steptoolarge;
 	}
 }
+
+Phys Stellar::shootIn(){
+	double nabla_rad;
+	for(long j=Ndim-2;j>=long(Ndim/2)-1;j--){
+			R[j] = R[j+1] - dM/(4.*Pi*pow(R[j+1],2)*rho[j+1]);
+			P[j] = P[j+1] + dM*G*M[j+1]/(4.*Pi*pow(R[j+1],4));
+			L[j] = L[j+1] - dM*epsilon[j+1];
+			nabla_rad = (3.*kappa[j+1]*L[j+1]*P[j+1]/
+				(16.*Pi*a*c*pow(T[j+1],4)*G*M[j+1]));
+			if(nabla_rad < (gamma_c-1.)/gamma_c){
+				T[j] = T[j+1] + (dM*3.*kappa[j+1]*L[j+1]/
+				(16.*Pi*a*c*pow(R[j+1],2)*pow(T[j+1],3))/(4.*Pi*pow(R[j+1],2)));
+			}else{
+				T[j] = T[j+1] - (dM*(gamma_c-1.)/gamma_c*
+				T[j+1]/P[j+1]*(P[j+1] - P[j])/dM);
+			}
+			//********************************************************
+			// Check that we don't overshoot so that either the radius 
+			// or luminosity become negative
+			//********************************************************
+			if(R[j] <= 0. or L[j] <= 0.){
+				if(logOut){
+					cout<<"R[j] <= 0. or L[j] <= 0." << endl;
+					outNumberOfIterate();
+					cout << " j:"<<j<<" R[j]:"<<R[j]<<" L[j]:"<<L[j]<<endl;
+				}
+				throw e_state::overshoot;
+			}
+			M[j] = M[j+1] - dM;
+			rho[j] = P[j]*mu*m_H/(kB*T[j]);
+			epsilon[j] = (epsilon_pp*rho[j]*pow(T[j],4.)+
+					epsilon_CNO*rho[j]*pow((T[j]/1.E6),16));
+			kappa[j] = kappa0*rho[j]*pow(T[j],-3.5);
+	}
+	long mid = long(Ndim/2)-1;
+	checkOverflow(mid);
+	return Phys(M[mid],R[mid],P[mid],T[mid],L[mid],rho[mid],kappa[mid],epsilon[mid]);
+}
+
+
 
 Phys Stellar::shootOut(){
 	double nabla_rad;
@@ -216,9 +220,11 @@ Phys Stellar::shootOut(){
 		// such that one of them becomes negative
 		//******************************************************
 		if(T[i] <= 0. or P[i] <= 0.){
-			cout<<"T[i] <= 0. or P[i] <= 0.";
-			cout << " i:"<<i<<" T[i]:"<<T[i]<<" P[i]:"<<P[i]<<endl;
-			exit(0);
+			if(logOut){
+				cout<<"T[i] <= 0. or P[i] <= 0.";
+				cout << " i:"<<i<<" T[i]:"<<T[i]<<" P[i]:"<<P[i]<<endl;
+			}
+			throw e_state::overshoot;
 		}
 		M[i] = M[i-1] + dM;
 		rho[i] = P[i]*mu*m_H/(kB*T[i]);
@@ -227,6 +233,7 @@ Phys Stellar::shootOut(){
 		kappa[i] = kappa0*rho[i]*pow(T[i],(-3.5));
 	}
 	long mid = long(Ndim/2)-1;
+	checkOverflow(mid);
 	return Phys(M[mid],R[mid],P[mid],T[mid],L[mid],rho[mid],kappa[mid],epsilon[mid]);
 }
 
@@ -277,7 +284,7 @@ void Stellar::setPerturbRs(){
 Stellar::~Stellar(){
 }
 
-void Stellar::calc(){
+e_state Stellar::calc(){
 	double Rdiff1,Pdiff1,Tdiff1,Ldiff1;
 	double Rdiff2,Pdiff2,Tdiff2,Ldiff2;
 	double Rdiff3,Pdiff3,Tdiff3,Ldiff3;
@@ -293,99 +300,113 @@ void Stellar::calc(){
 	Eigen::MatrixXd A(4,4);
 	Eigen::VectorXd x(4),y(4);
 
-	while(!converge && numberOfIterate<maxIterate){
-		setOuterBoundary();
-		setInnerBoundary();
-		Phys physMidO=shootOut();
-		Phys physMidI=shootIn();
-		converge = checkConvergence(physMidI,physMidO);
-		if(!converge){
-			setPerturbPc();
-			physMidOp1=shootOut();
-			setPerturbTc();
-			physMidOp2=shootOut();
-			setPerturbLs();
-			physMidIp1=shootIn();
-			setPerturbRs();
-			physMidIp2=shootIn();
-
-			physDiff0 = physMidO - physMidI;
-			physDiff1 = physMidOp1 - physMidI;
-			physDiff2 = physMidOp2 - physMidI;
-			physDiff3 = physMidO - physMidIp1;
-			physDiff4 = physMidO - physMidIp2;
-
-			phys_dPc = physDiff1 - physDiff0;
-			phys_dTc = physDiff2 - physDiff0;
-			phys_dLs = physDiff3 - physDiff0;
-			phys_dRs = physDiff4 - physDiff0;
-
-			d_deltaR_dPc = phys_dPc.getR() / (pertubRatio*getPc());
-			d_deltaR_dTc = phys_dTc.getR() / (pertubRatio*getTc());
-			d_deltaR_dLs = phys_dLs.getR() / (pertubRatio*getLs());
-			d_deltaR_dRs = phys_dRs.getR() / (pertubRatio*getRs());
-
-			d_deltaP_dPc = phys_dPc.getP() / (pertubRatio*getPc());
-			d_deltaP_dTc = phys_dTc.getP() / (pertubRatio*getTc());
-			d_deltaP_dLs = phys_dLs.getP() / (pertubRatio*getLs());
-			d_deltaP_dRs = phys_dRs.getP() / (pertubRatio*getRs());
-
-			d_deltaT_dPc = phys_dPc.getT() / (pertubRatio*getPc());
-			d_deltaT_dTc = phys_dTc.getT() / (pertubRatio*getTc());
-			d_deltaT_dLs = phys_dLs.getT() / (pertubRatio*getLs());
-			d_deltaT_dRs = phys_dRs.getT() / (pertubRatio*getRs());
-
-			d_deltaL_dPc = phys_dPc.getL() / (pertubRatio*getPc());
-			d_deltaL_dTc = phys_dTc.getL() / (pertubRatio*getTc());
-			d_deltaL_dLs = phys_dLs.getL() / (pertubRatio*getLs());
-			d_deltaL_dRs = phys_dRs.getL() / (pertubRatio*getRs());
-
-			A(0,0)=d_deltaR_dPc;
-			A(0,1)=d_deltaR_dTc;
-			A(0,2)=d_deltaR_dLs;
-			A(0,3)=d_deltaR_dRs;
-			A(1,0)=d_deltaP_dPc;
-			A(1,1)=d_deltaP_dTc;
-			A(1,2)=d_deltaP_dLs;
-			A(1,3)=d_deltaP_dRs;
-			A(2,0)=d_deltaT_dPc;
-			A(2,1)=d_deltaT_dTc;
-			A(2,2)=d_deltaT_dLs;
-			A(2,3)=d_deltaT_dRs;
-			A(3,0)=d_deltaL_dPc;
-			A(3,1)=d_deltaL_dTc;
-			A(3,2)=d_deltaL_dLs;
-			A(3,3)=d_deltaL_dRs;
-
-			y(0)=con_fact*physDiff0.getR();
-			y(1)=con_fact*physDiff0.getP();
-			y(2)=con_fact*physDiff0.getT();
-			y(3)=con_fact*physDiff0.getL();
-
-			x = A.inverse()*y;
-
-			setPc(getPc()-double(x[0]));
-			setTc(getTc()-double(x[1]));
-			setLs(getLs()-double(x[2]));
-			setRs(getRs()-double(x[3]));
-
-			//Migrade result
+	try{
+		while(!converge && numberOfIterate<maxIterate){
 			setOuterBoundary();
 			setInnerBoundary();
-			shootOut();
-			shootIn();
+			Phys physMidO=shootOut();
+		//	if(physMidO.state == overshoot){return e_state::overshoot;}
+			Phys physMidI=shootIn();
+			converge = checkConvergence(physMidI,physMidO);
+			if(!converge){
+				setPerturbPc();
+				physMidOp1=shootOut();
+				setPerturbTc();
+				physMidOp2=shootOut();
+				setPerturbLs();
+				physMidIp1=shootIn();
+				setPerturbRs();
+				physMidIp2=shootIn();
 
-			//outDifference(A,x,y);
+				physDiff0 = physMidO - physMidI;
+				physDiff1 = physMidOp1 - physMidI;
+				physDiff2 = physMidOp2 - physMidI;
+				physDiff3 = physMidO - physMidIp1;
+				physDiff4 = physMidO - physMidIp2;
+
+				phys_dPc = physDiff1 - physDiff0;
+				phys_dTc = physDiff2 - physDiff0;
+				phys_dLs = physDiff3 - physDiff0;
+				phys_dRs = physDiff4 - physDiff0;
+
+				d_deltaR_dPc = phys_dPc.getR() / (pertubRatio*getPc());
+				d_deltaR_dTc = phys_dTc.getR() / (pertubRatio*getTc());
+				d_deltaR_dLs = phys_dLs.getR() / (pertubRatio*getLs());
+				d_deltaR_dRs = phys_dRs.getR() / (pertubRatio*getRs());
+
+				d_deltaP_dPc = phys_dPc.getP() / (pertubRatio*getPc());
+				d_deltaP_dTc = phys_dTc.getP() / (pertubRatio*getTc());
+				d_deltaP_dLs = phys_dLs.getP() / (pertubRatio*getLs());
+				d_deltaP_dRs = phys_dRs.getP() / (pertubRatio*getRs());
+
+				d_deltaT_dPc = phys_dPc.getT() / (pertubRatio*getPc());
+				d_deltaT_dTc = phys_dTc.getT() / (pertubRatio*getTc());
+				d_deltaT_dLs = phys_dLs.getT() / (pertubRatio*getLs());
+				d_deltaT_dRs = phys_dRs.getT() / (pertubRatio*getRs());
+
+				d_deltaL_dPc = phys_dPc.getL() / (pertubRatio*getPc());
+				d_deltaL_dTc = phys_dTc.getL() / (pertubRatio*getTc());
+				d_deltaL_dLs = phys_dLs.getL() / (pertubRatio*getLs());
+				d_deltaL_dRs = phys_dRs.getL() / (pertubRatio*getRs());
+
+				A(0,0)=d_deltaR_dPc;
+				A(0,1)=d_deltaR_dTc;
+				A(0,2)=d_deltaR_dLs;
+				A(0,3)=d_deltaR_dRs;
+				A(1,0)=d_deltaP_dPc;
+				A(1,1)=d_deltaP_dTc;
+				A(1,2)=d_deltaP_dLs;
+				A(1,3)=d_deltaP_dRs;
+				A(2,0)=d_deltaT_dPc;
+				A(2,1)=d_deltaT_dTc;
+				A(2,2)=d_deltaT_dLs;
+				A(2,3)=d_deltaT_dRs;
+				A(3,0)=d_deltaL_dPc;
+				A(3,1)=d_deltaL_dTc;
+				A(3,2)=d_deltaL_dLs;
+				A(3,3)=d_deltaL_dRs;
+
+				y(0)=con_fact*physDiff0.getR();
+				y(1)=con_fact*physDiff0.getP();
+				y(2)=con_fact*physDiff0.getT();
+				y(3)=con_fact*physDiff0.getL();
+
+				x = A.inverse()*y;
+
+				setPc(getPc()-double(x[0]));
+				setTc(getTc()-double(x[1]));
+				setLs(getLs()-double(x[2]));
+				setRs(getRs()-double(x[3]));
+
+				//Migrade result
+				setOuterBoundary();
+				setInnerBoundary();
+				shootOut();
+				shootIn();
+
+				//outDifference(A,x,y);
+			}
+			//outNumberOfIterate();
+			//outBoundary();		
+			numberOfIterate++;
 		}
-		//outNumberOfIterate();
-		//outBoundary();		
-		numberOfIterate++;
 	}
+	catch(e_state &e){
+		return e;
+		// if(e == overshoot){
+		// 	return false;
+		// }
+	}
+	if(converge == true){
+		return(e_state::converge);
+	}
+	return(e_state::notconverge);
 }
 
 bool Stellar::checkConvergence(Phys phys1,Phys phys2){
 	double Rdiff, Pdiff,Tdiff,Ldiff;
 	double Rmidpoint, Pmidpoint,Tmidpoint,Lmidpoint;
+	if(!isfinite(phys1.getT()) == true || !isfinite(phys2.getT())){throw e_state::overflow;}
 	Rdiff = phys1.getR() - phys2.getR();
 	Pdiff = phys1.getP() - phys2.getP();
 	Tdiff = phys1.getT() - phys2.getT();
@@ -496,4 +517,8 @@ void Stellar::outDifference(Eigen::MatrixXd A,Eigen::VectorXd x,Eigen::VectorXd 
 			cout << "A:\n" << A << endl;
 			cout << "x:" << x.transpose() << endl;
 			cout << "y:" << y.transpose() << endl;
+}
+
+void Stellar::checkOverflow(long index){
+	if(!isfinite(T[index])){throw e_state::overflow;}
 }

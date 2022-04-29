@@ -6,6 +6,8 @@ using namespace std;
 
 // This program calculate stellar interia
 // structure from mass factor 10 to 100 
+// Boundary condition are surface temperature Ts and pressure Ps
+// Ts:1E3[K], Ps1E8[K]
 int main(){
 	double fact_star=1.;//Mass factor to solar mass;M_{*}/M_{\circledcirc}
 	double X=0.70;//Hydrogen mass fraction
