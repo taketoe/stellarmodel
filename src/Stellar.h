@@ -69,7 +69,8 @@ private:
 	double X,Y,Z,mu;
 	double epsilon_pp,epsilon_CNO;
 	double kappa0;
-	std::array<double,Ndim> M,R,T,P,L,rho,kappa,epsilon;
+	std::array<double,Ndim> M,R,T,P,L;
+	std::array<double,Ndim> rho,kappa,epsilon;
 	double dM,Pc,Tc,Ps,Ts,Rs,Ls;
 	bool logOut;
 	long numberOfIterate=0;
@@ -84,6 +85,14 @@ public:
 	Phys getPhys(long);
 	void getResult();
 	void setPc(double);
+	std::array<double,Ndim> getM(){return M;}
+	std::array<double,Ndim> getR(){return R;}
+	std::array<double,Ndim> getP(){return P;}
+	std::array<double,Ndim> getT(){return T;}
+	std::array<double,Ndim> getL(){return L;}
+	std::array<double,Ndim> getRho(){return rho;}
+	std::array<double,Ndim> getKappa(){return kappa;}
+	std::array<double,Ndim> getEpsilon(){return epsilon;}
 private:
 	double getPc();
 	double getTc();
@@ -113,95 +122,13 @@ private:
 	void checkOverflow(long);
 };
 
-class EnergyGeneration{
+class EnergyGen{
 	public:
-		EnergyGeneration(){};
-		~EnergyGeneration(){};
-		double PP_RPN(double rho,double X,double T){
-			//Ref. R.P.Nelson,https://2019.qmplus.qmul.ac.uk/course/;
-			//SPA7023U - STELLAR STRUCTURE AND EVOLUTION
-			//rho:[kg/m^3]
-			//X:Hydrogen fraction[-]
-			//T:Temperature[K]
-			double e_;//[J/s/kg]
-			double e_pp0 = 2.38E-37;
-			double alpha_= 4;
-			//3.5 ~ alpha ~ 6
-			//T_{6}=10[K],P=1.E15[Pa] : alpha_=4.08
-			//T_{6}= 1[K],P=1.E15[Pa] : alpha_=3.6
-			e_ = e_pp0 * rho * pow(X,2.) * pow(T,alpha_); 
-			return e_;
-		}
-		double PP_KIP(double rho,double X,double T){
-			//Ref. R.Kippenhahn,p.163
-			//rho:[kg/m^3]
-			//X:Hydrogen fraction[-]
-			//T:Temperature[K]
-			double T6 = T/1E6;
-			double e_;//[J/s/kg]
-			double g_11,f_11,phi;
-			rho = rho * 1E-3;//[kg/m^3]->[g/cm^3]
-			g_11 = 1 + 0.0123*pow(T6,1./3.) 
-				+ 0.0109*pow(T6,2./3.)
-				+ 0.0009*T6;//around 1.
-			f_11 = exp(5.92E-3*1*1* pow(1. * rho / pow(T6/10,3),1./2.));//around 1.
-			phi  = 1.;
-			e_ = 2.38E6 * phi * f_11 * g_11 * rho  * pow(X,2.)
-				* pow(T6,-2./3.) * exp(-33.80 / pow(T6,1./3.)); 
-			e_ = e_ * 1E-4;//[erg/s/g]->[J/s/kg]
-			return e_;
-		}
-		double PP_AML(double rho,double X,double T){
-			//Ref. Aller and McLaughlin, 1965
-			//rho:[kg/m^3]
-			//X:Hydrogen fraction[-]
-			//T:Temperature[K]
-			double T6 = T/1E6;
-			double e_;//[J/s/kg]
-			double g_11,f,phi;
-			rho = rho * 1E-3;//[kg/m^3]->[g/cm^3]
-			g_11 = 1 + 0.0123*pow(T6,1./3.) 
-				+ 0.0109*pow(T6,2./3.)
-				+ 0.0009*T6;//around 1.
-			f = 1+0.25*pow(rho,1./2.)*pow(T6,-3./2.);
-			phi  = 1.;
-			e_ = 2.38E6 * phi * f * g_11 * rho  * pow(X,2.)
-				* pow(T6,-2./3.) * exp(-33.80 / pow(T6,1./3.)); 
-			e_ = e_ * 1E-4;//[erg/s/g]->[J/s/kg]
-			return e_;
-		}
-		double PP_REDUCED(double rho,double X,double T){
-			//rho:[kg/m^3]
-			//X:Hydrogen fraction[-]
-			//T:Temperature[K]
-			double T6 = T/1E6;
-			double e_;//[J/s/kg]
-			double g_11,f_11,phi;
-			rho = rho * 1E-3;//[kg/m^3]->[g/cm^3]
-			g_11 = 1.;
-			f_11 = 1.;
-			phi  = 1.;
-			e_ = 2.38E6 * phi * f_11 * g_11 * rho  * pow(X,2.)
-				* pow(T6,-2./3.) * exp(-33.80 / pow(T6,1./3.)); 
-			e_ = e_ * 1E-4;//[erg/s/g]->[J/s/kg]
-			return e_;
-		}
-		double CNO_KIP(double rho,double X1,double X_CNO,double T){
-			//Ref. R.Kippenhahn,p.163
-			//rho:[kg/m^3]
-			//X1:Hydrogen fraction[-]
-			//X_CNO:,also Z
-			//T:Temperature[K]
-			double T6 = T/1E6;
-			double e_;//[J/s/kg]
-			double g_141;
-			rho = rho * 1E-3;//[kg/m^3]->[g/cm^3]
-			g_141 = 1 + 0.0027*pow(T6,1./3.) 
-				- 0.00778*pow(T6,2./3.)
-				- 0.000149*T6;//around 1.
-			e_ = 8.67E27 * g_141 * X_CNO * pow(X1,2.) * rho  
-				* pow(T6,-2./3.) * exp(-152.28 / pow(T6,1./3.)); 
-			e_ = e_ * 1E-4;//[erg/s/g]->[J/s/kg]
-			return e_;
-		}
+		EnergyGen(){};
+		~EnergyGen(){};
+		double PP_RPN(double rho,double X,double T);
+		double PP_KIP(double rho,double X,double T);
+		double PP_AML(double rho,double X,double T);
+		double PP_REDUCED(double rho,double X,double T);
+		double CNO_KIP(double rho,double X1,double X_CNO,double T);
 };

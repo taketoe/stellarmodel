@@ -12,7 +12,7 @@ int main(){
 	rho=1E5;//[kg/m^3],100[g/cm^2]
 //	rho=1E3;//[kg/m^3],1[g/cm^3]
 
-	EnergyGeneration ene = EnergyGeneration();
+	EnergyGen ene = EnergyGen();
 	cout << "PP-chain" << endl;
 	cout << " RPN:"<< scientific << ene.PP_RPN(rho,X,T) << "[J/s/kg]" << endl;
 	cout << " KIP:"<< scientific << ene.PP_KIP(rho,X,T) << "[J/s/kg]" << endl;
