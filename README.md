@@ -1,6 +1,6 @@
 # Stellar Model Numerical Calculation Code
 ## Overview
- This package povides numerical calculation codes of stellar interia model. You can calculate 
+ This package povides numerical calculation codes of stellar interia model. You can calculate and plot stellar interia structure which are temeperature, presurre, energy flux and so on.
 
 ## Installation
  The software is using following external packages.
