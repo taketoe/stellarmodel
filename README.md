@@ -26,6 +26,6 @@
 ```
 
 ## References
-### 1. Python codes and PDF files.[SPA7023U,R.P.Nelson,QM Plus](https://2019.qmplus.qmul.ac.uk/course/view.php?id=9017),Queen Mary University of London.
-### 2. Stellar Structure and Evolution,R.Kippenhahan and A.Weigert.
+ 1. Python codes and PDF files.[SPA7023U,R.P.Nelson,QM Plus](https://2019.qmplus.qmul.ac.uk/course/view.php?id=9017),Queen Mary University of London.
+ 2. Stellar Structure and Evolution,R.Kippenhahan and A.Weigert.
 
