@@ -1,15 +1,15 @@
-# Stellar Model Numerical Calsulation Code h1
-## Overview h2
+# Stellar Model Numerical Calsulation Code
+## Overview
  This package povides numerical calculation codes of stellar interia model. You can calculate 
 
-## Installation h2
+## Installation
  The software is using following external packages.
-### matplotlibcpp h3
+### matplotlibcpp
   Matplotlibcpp pvovides to use matplotlib in C++.
   Installation is easy to place a heade file,matplotlibcpp.h, to your directory. The header file is already includeed this package. You can also use newer one through Github. 
-### Eigen h3
+### Eigen
   
-## Sample codes and result h2
+## Sample codes and result
 ```c++
  #include "Stellar.h"
  int main(){
@@ -25,7 +25,7 @@
  }
 ```
 
-## References h2
-### 1. Python codes and PDF files.[SPA7023U,R.P.Nelson,QM Plus](https://2019.qmplus.qmul.ac.uk/course/view.php?id=9017),Queen Mary University of London. h3
-### 2. Stellar Structure and Evolution,R.Kippenhahan and A.Weigert. h3
+## References
+### 1. Python codes and PDF files.[SPA7023U,R.P.Nelson,QM Plus](https://2019.qmplus.qmul.ac.uk/course/view.php?id=9017),Queen Mary University of London.
+### 2. Stellar Structure and Evolution,R.Kippenhahan and A.Weigert.
 
