@@ -26,10 +26,10 @@
 	stellar.plot();
  }
 ```
-<img src="[Sample 1](https://github.com/taketoe/stellarmodel/blob/master/example/sun.png)" width="300">
-<img src="[Sample 1](https://github.com/taketoe/stellarmodel/blob/master/example/sun10_100.png)" width="300">
-<img src="[Sample 2](https://github.com/taketoe/stellarmodel/blob/master/example/sun.png)" width="300">
-<img src="[Sample 3](https://github.com/taketoe/stellarmodel/blob/master/example/energy_gen_KIP.png)" width="300">
+![Sample result](https://github.com/taketoe/stellarmodel/blob/master/example/sun.png)
+![Sample result](https://github.com/taketoe/stellarmodel/blob/master/example/sun10_100.png)
+![Sample result](https://github.com/taketoe/stellarmodel/blob/master/example/energy_gen_KIP.png)
+
 (*) x-axis Temperature[K] vs y-axis energy generation [J/s/kg]
 
 
