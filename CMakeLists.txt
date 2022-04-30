@@ -19,6 +19,7 @@ add_executable(sun80 example/sun80.cpp src/Stellar.cpp src/Stellar.h)
 add_executable(sun100 example/sun100.cpp src/Stellar.cpp src/Stellar.h)
 add_executable(sun10_100 example/sun10_100.cpp src/Stellar.cpp src/Stellar.h)
 add_executable(energy_gen example/energy_gen.cpp src/Stellar.cpp src/Stellar.h)
+add_executable(energy_gen_KIP example/energy_gen_KIP.cpp src/Stellar.cpp src/Stellar.h)
 set(CMAKE_CXX_FLAGS "-O4")
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
