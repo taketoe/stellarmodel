@@ -94,12 +94,12 @@ public:
 	std::array<double,Ndim> getKappa(){return kappa;}
 	std::array<double,Ndim> getEpsilon(){return epsilon;}
 private:
-	double getPc();
-	double getTc();
-	double getPs();
-	double getTs();
-	double getRs();
-	double getLs();
+	double getPc(){return Pc;};
+	double getTc(){return Tc;};
+	double getPs(){return Ps;};
+	double getTs(){return Ts;};
+	double getRs(){return Rs;};
+	double getLs(){return Ls;};
 
 	void setTc(double);
 	void setLs(double);

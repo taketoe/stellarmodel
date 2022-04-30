@@ -100,13 +100,6 @@ void Stellar::setParameters(double mstarFact,double X,double Y, double Z, double
 //	Rs=1221099387.2099824;
 }
 
-double Stellar::getPc(){return Pc;}
-double Stellar::getTc(){return Tc;}
-double Stellar::getPs(){return Ps;}
-double Stellar::getTs(){return Ts;}
-double Stellar::getRs(){return Rs;}
-double Stellar::getLs(){return Ls;}
-
 Phys Stellar::getPhys(long index){
 	return Phys(M[index],R[index],P[index],T[index],L[index],rho[index],kappa[index],epsilon[index]);
 }
