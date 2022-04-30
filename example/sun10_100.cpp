@@ -64,12 +64,15 @@ int main(){
 	plt::title("Mass factor vs Central Pressure");
 	plt::xlabel("$\\rm M_{*}/M_{\\circledcirc} [-]$");
 	plt::ylabel("$\\rm P_{c} [Pa]$");
+	plt::xlim(0.,120.);
 	plt::plot(M_,Pc_,"or-");
+	plt::tight_layout();
 
 	plt::subplot(2,2,2);
 	plt::title("Mass factor vs Central Temperature");
 	plt::xlabel("$\\rm M_{*}/M_{\\circledcirc} [-]$");
 	plt::ylabel("$\\rm T_{c} [K]$");
+	plt::xlim(0.,120.);
 	plt::plot(M_,Tc_,"or-");
 	plt::tight_layout();
 
@@ -78,6 +81,7 @@ int main(){
 	plt::xlabel("$\\rm M_{*}/M_{\\circledcirc} [-]$");
 	plt::ylabel("$\\rm L_{s} [W]$");
 	plt::plot(M_,Ls_,"or-");
+	plt::xlim(0.,120.);
 	plt::tight_layout();
 
 	plt::subplot(2,2,4);
@@ -85,6 +89,7 @@ int main(){
 	plt::xlabel("$\\rm M_{*}/M_{\\circledcirc} [-]$");
 	plt::ylabel("$\\rm R_{s} [m]$");
 	plt::plot(M_,Rs_,"or-");
+	plt::xlim(0.,120.);
 	plt::tight_layout();
 
 	plt::show();
