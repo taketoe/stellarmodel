@@ -10,7 +10,9 @@ int main(){
 	double X=0.70;//Hydrogen mass fraction
 	double Y=0.28;//Helium mass fraction
 	double Z=0.02;//Heavy element abundance
-	Stellar stellar(fact_star,X,Y,Z);
+	double Ts=1.E3;
+	double Ps=1.E8;
+	Stellar stellar(fact_star,X,Y,Z,Ts,Ps);
 	stellar.setLog(true);
 	stellar.calc();
 	stellar.getResult();
@@ -18,6 +20,5 @@ int main(){
 	R = stellar.getR();
 	P = stellar.getP();
 	T = stellar.getT();
-
 
 }

@@ -4,8 +4,8 @@
 
 ## Installation
  The software is using following external packages.
-### matplotlibcpp
-  Matplotlibcpp pvovides to use matplotlib in C++.
+### 1. matplotlib-cpp
+  [Matplotlib-cpp](https://github.com/lava/matplotlib-cpp) pvovides to use matplotlib in C++.
   Installation is easy to place a heade file,matplotlibcpp.h, to your directory. The header file is already includeed this package. You can also use newer one through Github. 
 ### Eigen
   
@@ -17,9 +17,11 @@
 	double X=0.70;//Hydrogen mass fraction
 	double Y=0.28;//Helium mass fraction
 	double Z=0.02;//Heavy element abundance
-	Stellar stellar(fact_star,X,Y,Z);
+	double Ts=1.E3;//Boundary sondition;Temerature of stellar surface 
+	double Ps=1.E8;//Boundary sondition;Temerature of stellar Pressure
+	Stellar stellar(fact_star,X,Y,Z,Ts,Ps);
 	stellar.setLog(true);
-	stellar.calc();
+	stellar.calc();//Main calculation routine
 	stellar.getResult();
 	stellar.plot();
  }

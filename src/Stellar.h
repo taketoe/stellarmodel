@@ -76,8 +76,8 @@ private:
 	long numberOfIterate=0;
 public:
 	Stellar();
-	Stellar(double msun);
-	Stellar(double msun,double x,double y, double z);
+	//Stellar(double msun);
+	Stellar(double msun,double X,double Y,double Z,double Ts,double Ps);
 	~Stellar();
 	e_state calc();
 	void setLog(bool);
@@ -104,7 +104,7 @@ private:
 	void setTc(double);
 	void setLs(double);
 	void setRs(double);
-	void setParameters(double msun,double x,double y, double z);
+	void setParameters(double msun,double X,double Y, double Z,double Ts,double Ps);
 	void setInnerBoundary();
 	void setOuterBoundary();
 	Phys shootOut();

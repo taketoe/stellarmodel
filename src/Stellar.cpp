@@ -51,24 +51,25 @@ void Phys::Out(){
 
 Stellar::Stellar():logOut(false){
 	double mstar_fact = 1;
-	double x=0.70;
-	double y=0.28;
-	double z=0.02;
-	setParameters(mstar_fact,x,y,z);
-}
-Stellar::Stellar(double mstarFact):logOut(false){
-	double x=0.70;
-	double y=0.28;
-	double z=0.02;
-	setParameters(mstarFact,x,y,z);
-}
-Stellar::Stellar(double mstarFact,double x,double y, double z):logOut(false){
-	setParameters(mstarFact,x,y,z);
+	double X=0.70;
+	double Y=0.28;
+	double Z=0.02;
+	double Ts=1.E3;
+	double Ps=1.E8;
+	setParameters(mstar_fact,X,Y,Z,Ts,Ps);
 }
 
-void Stellar::setParameters(double mstarFact,double x,double y, double z){
+Stellar::Stellar(double mstarFact,double X,double Y, double Z, double Ts, double Ps):logOut(false){
+	setParameters(mstarFact,X,Y,Z,Ts,Ps);
+}
+
+void Stellar::setParameters(double mstarFact,double X,double Y, double Z, double Ts, double Ps){
 	mstar_fact = mstarFact;
-	X=x;Y=y;Z=z;
+	this->X=X;
+	this->Y=Y;
+	this->Z=Z;
+	this->Ts=Ts;                 		// Surface temperature; input value
+	this->Ps=Ps;                  		// Surface pressure; input value
 
 	Mstar=double(mstar_fact)*Msun;
 	if (Mstar < 1.66*Msun){
@@ -89,8 +90,6 @@ void Stellar::setParameters(double mstarFact,double x,double y, double z){
 	Pc=1.E15;                 		// Initial guess for central pressure
 	Tc=1.E7*pow((Mstar/Msun),0.5); 	// Initial guess for centraltemperature
 
-	Ts=1000.;                 		// Surface temperature; input value
-	Ps=1.E8;                  		// Surface pressure; input value
 	Rs=1.*Rstar;              		// Stellar radius; input value
 	Ls=Lsun*pow((Mstar/Msun),3.); 	// Luminosity; calculated value
 
@@ -208,12 +207,8 @@ Phys Stellar::shootOut(){
 			(4*a*c*pow(T[i-1],3.))/(16.*pow(Pi,2.)*pow(R[i-1],4.));
 		}
 		else{
-//			T[i] = T[i-1] + (dM*(gamma_c-1.)/gamma_c*
-//					T[i-1]/P[i-1]*(P[i]-P[i-1])/dM);
 			T[i] = T[i-1] + (gamma_c-1.)/gamma_c*
 					T[i-1]/P[i-1]*(P[i]-P[i-1]);
-				//	cout << "*** flag i:"<< i << " ";
-				//	outNumberOfIterate();
 		}
 		//******************************************************
 		// Check we don't overshoot the temperature or pressure 

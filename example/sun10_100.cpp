@@ -13,12 +13,14 @@ int main(){
 	double X=0.70;//Hydrogen mass fraction
 	double Y=0.28;//Helium mass fraction
 	double Z=0.02;//Heavy element abundance
+	double Ts=1.E3;
+	double Ps=1.E8;
 	double Pc = 1.E15;//Initial value of central pressure
 	Stellar stellar;//Stellar model class
 	e_state state=notconverge;
 	int i = 0;
 
-	const int arr_size=9;
+	const int arr_size=10;
 	Eigen::VectorXd _M(arr_size),_Pc(arr_size),_Tc(arr_size);
 	Eigen::VectorXd _Ls(arr_size),_Rs(arr_size);
 	std::array<double,arr_size> M_,Pc_,Tc_,Ls_,Rs_;
@@ -28,14 +30,14 @@ int main(){
 	for(fact_star=10;fact_star<int(step*arr_size)+1;fact_star+=step){
 		cout << "Mass factor:" << fact_star;
 		while(!(state==converge) && i<100000){
-			stellar = Stellar(fact_star,X,Y,Z);
+			stellar = Stellar(fact_star,X,Y,Z,Ts,Ps);
 			Pc=Pc*1.001;
 			stellar.setPc(Pc);
 			stellar.setLog(false);
 			state=stellar.calc();
 
 			if(state == converge){
-//				cout << " converge" << endl;
+				cout << " converge" << endl;
 				_M(j)=fact_star;M_[j]=_M(j);
 				_Pc(j)=stellar.getPhys(0).getP();Pc_[j]=_Pc(j);
 				_Tc(j)=stellar.getPhys(0).getT();Tc_[j]=_Tc(j);
@@ -45,7 +47,6 @@ int main(){
 				cout << " Tc:"<< Tc_[j]<<endl;
 				j++;
 			}
-			//if(i%100==0){cout << "  i:"<<i << endl;}
 			i++;
 		}if(state==notconverge){cout<<" not converge"<<endl;}
 		state=notconverge;
