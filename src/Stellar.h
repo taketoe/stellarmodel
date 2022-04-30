@@ -84,7 +84,7 @@ public:
 	void plot();
 	Phys getPhys(long);
 	void getResult();
-	void setPc(double);
+	void setPc(double Pc){this->Pc=Pc;}
 	std::array<double,Ndim> getM(){return M;}
 	std::array<double,Ndim> getR(){return R;}
 	std::array<double,Ndim> getP(){return P;}
@@ -101,9 +101,9 @@ private:
 	double getRs(){return Rs;};
 	double getLs(){return Ls;};
 
-	void setTc(double);
-	void setLs(double);
-	void setRs(double);
+	void setTc(double Tc){this->Tc=Tc;};
+	void setLs(double Ls){this->Ls=Ls;};
+	void setRs(double Rs){this->Rs=Rs;};
 	void setParameters(double msun,double X,double Y, double Z,double Ts,double Ps);
 	void setInnerBoundary();
 	void setOuterBoundary();

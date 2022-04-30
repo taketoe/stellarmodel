@@ -104,11 +104,6 @@ Phys Stellar::getPhys(long index){
 	return Phys(M[index],R[index],P[index],T[index],L[index],rho[index],kappa[index],epsilon[index]);
 }
 
-void Stellar::setPc(double pc){Pc=pc;}
-void Stellar::setTc(double tc){Tc=tc;}
-void Stellar::setLs(double ls){Ls=ls;}
-void Stellar::setRs(double rs){Rs=rs;}
-
 void Stellar::setInnerBoundary(){
 	P[0]=Pc;
 	T[0]=Tc;
