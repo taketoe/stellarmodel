@@ -26,14 +26,10 @@
 	stellar.plot();
  }
 ```
-<img src="https://github.com/taketoe/stellarmodel/blob/master/example/sun.png" width="300px">
-
-![Sample result](https://github.com/taketoe/stellarmodel/blob/master/example/sun.png)
-![Sample result](https://github.com/taketoe/stellarmodel/blob/master/example/sun10_100.png)
-![Sample result](https://github.com/taketoe/stellarmodel/blob/master/example/energy_gen_KIP.png)
-
+<img src="https://github.com/taketoe/stellarmodel/blob/master/example/sun.png" width="600px">
+<img src="https://github.com/taketoe/stellarmodel/blob/master/example/sun10_100.png" width="600px">
+<img src="https://github.com/taketoe/stellarmodel/blob/master/example/energy_gen_KIP.png" width="600px">
 (*) x-axis Temperature[K] vs y-axis energy generation [J/s/kg]
-
 
 ## References
  1. Python codes and PDF files.[SPA7023U,R.P.Nelson,QM Plus](https://2019.qmplus.qmul.ac.uk/course/view.php?id=9017),Queen Mary University of London.
