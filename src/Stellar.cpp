@@ -87,7 +87,8 @@ void Stellar::setParameters(double mstarFact,double X,double Y, double Z, double
 
 	M[0]=1.E-06*Mstar;        		// Mass of inner cell
 	dM=(Mstar-M[0])/(double(Ndim-1)); 		// Mass of each mass shell
-	Pc=1.E15;                 		// Initial guess for central pressure
+//	Pc=1.E15;                 		// Initial guess for central pressure;pp_RPN
+	Pc=1.E16;                 		// Initial guess for central pressure;pp_KIP
 	Tc=1.E7*pow((Mstar/Msun),0.5); 	// Initial guess for centraltemperature
 
 	Rs=1.*Rstar;              		// Stellar radius; input value
@@ -109,7 +110,8 @@ void Stellar::setInnerBoundary(){
 	T[0]=Tc;
 	rho[0]=P[0]*mu*m_H/(kB*T[0]);
 	R[0]=pow(3.*M[0]/(4.*Pi*rho[0]),1./3.);
-	epsilon[0]=epsilon_pp*rho[0]*pow(T[0],4.)+epsilon_CNO*rho[0]*pow(T[0]/1.E6,16);
+//	epsilon[0]=epsilon_pp*rho[0]*pow(T[0],4.)+epsilon_CNO*rho[0]*pow(T[0]/1.E6,16);
+	epsilon[0]=eps_pp(rho[0],X,T[0])+eps_CNO(rho[0],X,Z,T[0]);
 	L[0]=epsilon[0]*M[0];
 	kappa[0]=kappa0*rho[0]*pow(T[0],-3.5);
 }
@@ -122,8 +124,10 @@ void Stellar::setOuterBoundary(){
 	P[Ndim-1]=Ps;
 	rho[Ndim-1]=P[Ndim-1]*mu*m_H/(kB*T[Ndim-1]);
 	kappa[Ndim-1]=kappa0*rho[Ndim-1]*pow(T[Ndim-1],-3.5);
-	epsilon[Ndim-1]=epsilon_pp*rho[Ndim-1]*pow(T[Ndim-1],4.)
-		+epsilon_CNO*rho[Ndim-1]*pow(T[Ndim-1]/1.E6,16);
+//	epsilon[Ndim-1]=epsilon_pp*rho[Ndim-1]*pow(T[Ndim-1],4.)
+//		+epsilon_CNO*rho[Ndim-1]*pow(T[Ndim-1]/1.E6,16);
+	epsilon[Ndim-1]=eps_pp(rho[Ndim-1],X,T[Ndim-1])
+		+eps_CNO(rho[Ndim-1],X,Z,T[Ndim-1]);
 
 	//*****************************************
 	// Check the size of the first radial step
@@ -168,8 +172,10 @@ Phys Stellar::shootIn(){
 			}
 			M[j] = M[j+1] - dM;
 			rho[j] = P[j]*mu*m_H/(kB*T[j]);
-			epsilon[j] = (epsilon_pp*rho[j]*pow(T[j],4.)+
-					epsilon_CNO*rho[j]*pow((T[j]/1.E6),16));
+//			epsilon[j] = (epsilon_pp*rho[j]*pow(T[j],4.)+
+//					epsilon_CNO*rho[j]*pow((T[j]/1.E6),16));
+			epsilon[j] = eps_pp(rho[j],X,T[j])
+					+eps_CNO(rho[j],X,Z,T[j]);
 			kappa[j] = kappa0*rho[j]*pow(T[j],-3.5);
 	}
 	long mid = long(Ndim/2)-1;
@@ -211,8 +217,10 @@ Phys Stellar::shootOut(){
 		}
 		M[i] = M[i-1] + dM;
 		rho[i] = P[i]*mu*m_H/(kB*T[i]);
-		epsilon[i] = (epsilon_pp*rho[i]*pow(T[i],4.)+
-		    	      epsilon_CNO*rho[i]*pow((T[i]/1.E6),16.));
+//		epsilon[i] = (epsilon_pp*rho[i]*pow(T[i],4.)+
+//		    	      epsilon_CNO*rho[i]*pow((T[i]/1.E6),16.));
+		epsilon[i] = eps_pp(rho[i],X,T[i])
+					+eps_CNO(rho[i],X,Z,T[i]);
 		kappa[i] = kappa0*rho[i]*pow(T[i],(-3.5));
 	}
 	long mid = long(Ndim/2)-1;
@@ -225,7 +233,8 @@ void Stellar::setPerturbPc(){
 	T[0]=Tc;
 	rho[0]=P[0]*mu*m_H/(kB*T[0]);
 	R[0]=pow(3.*M[0]/(4.*Pi*rho[0]),1./3.);
-	epsilon[0]=epsilon_pp*rho[0]*pow(T[0],4.)+epsilon_CNO*rho[0]*pow(T[0]/1.E6,16);
+//	epsilon[0]=epsilon_pp*rho[0]*pow(T[0],4.)+epsilon_CNO*rho[0]*pow(T[0]/1.E6,16);
+	epsilon[0]=eps_pp(rho[0],X,T[0])+eps_CNO(rho[0],X,Z,T[0]);
 	L[0]=epsilon[0]*M[0];
 	kappa[0]=kappa0*rho[0]*pow(T[0],-3.5);	
 }
@@ -234,7 +243,8 @@ void Stellar::setPerturbTc(){
 	T[0]=Tc+pertubRatio*Tc;
 	rho[0]=P[0]*mu*m_H/(kB*T[0]);
 	R[0]=pow(3.*M[0]/(4.*Pi*rho[0]),1./3.);
-	epsilon[0]=epsilon_pp*rho[0]*pow(T[0],4.)+epsilon_CNO*rho[0]*pow(T[0]/1.E6,16);
+//	epsilon[0]=epsilon_pp*rho[0]*pow(T[0],4.)+epsilon_CNO*rho[0]*pow(T[0]/1.E6,16);
+	epsilon[0]=eps_pp(rho[0],X,T[0])+eps_CNO(rho[0],X,Z,T[0]);
 	L[0]=epsilon[0]*M[0];
 	kappa[0]=kappa0*rho[0]*pow(T[0],-3.5);
 }
@@ -247,8 +257,10 @@ void Stellar::setPerturbLs(){
 	P[Ndim-1]=Ps;
 	rho[Ndim-1]=P[Ndim-1]*mu*m_H/(kB*T[Ndim-1]);
 	kappa[Ndim-1]=kappa0*rho[Ndim-1]*pow(T[Ndim-1],-3.5);
-	epsilon[Ndim-1]=epsilon_pp*rho[Ndim-1]*pow(T[Ndim-1],4.)
-		+epsilon_CNO*rho[Ndim-1]*pow(T[Ndim-1]/1.E6,16);
+//	epsilon[Ndim-1]=epsilon_pp*rho[Ndim-1]*pow(T[Ndim-1],4.)
+//		+epsilon_CNO*rho[Ndim-1]*pow(T[Ndim-1]/1.E6,16);
+	epsilon[Ndim-1]=eps_pp(rho[Ndim-1],X,T[Ndim-1])
+		+eps_CNO(rho[Ndim-1],X,Z,T[Ndim-1]);
 }
 void Stellar::setPerturbRs(){
 	M[Ndim-1]=Mstar;
@@ -258,10 +270,10 @@ void Stellar::setPerturbRs(){
 	P[Ndim-1]=Ps;
 	rho[Ndim-1]=P[Ndim-1]*mu*m_H/(kB*T[Ndim-1]);
 	kappa[Ndim-1]=kappa0*rho[Ndim-1]*pow(T[Ndim-1],-3.5);
-	epsilon[Ndim-1]=epsilon_pp*rho[Ndim-1]*pow(T[Ndim-1],4.)
-		+epsilon_CNO*rho[Ndim-1]*pow(T[Ndim-1]/1.E6,16);
-
-
+//	epsilon[Ndim-1]=epsilon_pp*rho[Ndim-1]*pow(T[Ndim-1],4.)
+//		+epsilon_CNO*rho[Ndim-1]*pow(T[Ndim-1]/1.E6,16);
+	epsilon[Ndim-1]=eps_pp(rho[Ndim-1],X,T[Ndim-1])
+		+eps_CNO(rho[Ndim-1],X,Z,T[Ndim-1]);
 }
 
 Stellar::~Stellar(){
@@ -430,9 +442,9 @@ void Stellar::getResult(){
 	cout << "Stellar Surface" << endl;
 	physSurface.Out(); 
 }
-
+/*
 void Stellar::plot(){
-	std::array<double,Ndim> Mmodel,Rmodel,Pmodel,Tmodel,Lmodel,rhomodel;
+	std::vector<double> Mmodel,Rmodel,Pmodel,Tmodel,Lmodel,rhomodel;
 
 	plt::figure_size(1000,600);
 	plt::subplot(2,3,1);
@@ -480,7 +492,7 @@ void Stellar::plot(){
 	//plt::ion(); //
 	plt::show();
 }
-
+*/
 void Stellar::outNumberOfIterate(){
 		cout << " number of Iterate:" <<  numberOfIterate << endl;
 }
@@ -505,6 +517,17 @@ void Stellar::outDifference(Eigen::MatrixXd A,Eigen::VectorXd x,Eigen::VectorXd 
 void Stellar::checkOverflow(long index){
 	if(!isfinite(T[index])){throw e_state::overflow;}
 }
+
+	double Stellar::eps_pp(double rho,double X,double T){
+//		return(EnergyGen::PP_KIP(rho,X,T));
+		return(epsilon_pp*rho*pow(T,4.));
+	}
+
+	double Stellar::eps_CNO(double rho,double X1,double X_CNO,double T){
+//		return(EnergyGen::CNO_KIP(rho,X1,X_CNO,T));
+//		double e_CNO = epsilon_CNO*rho*pow(T/1.E6,16);
+		return(epsilon_CNO*rho*pow(T/1.E6,16));
+	}
 
 double EnergyGen::PP_RPN(double rho,double X,double T){
 	//Ref. R.P.Nelson,https://2019.qmplus.qmul.ac.uk/course/;

@@ -3,7 +3,7 @@
 #include <iomanip>
 #include <math.h>
 #include <array>
-#include "matplotlibcpp.h"
+//#include "matplotlibcpp.h"
 
 #include <Eigen/Dense>
 #include <Eigen/LU>
@@ -69,8 +69,14 @@ private:
 	double X,Y,Z,mu;
 	double epsilon_pp,epsilon_CNO;
 	double kappa0;
-	std::array<double,Ndim> M,R,T,P,L;
-	std::array<double,Ndim> rho,kappa,epsilon;
+	std::vector<double> M = std::vector<double>(Ndim);
+	std::vector<double> R = std::vector<double>(Ndim);
+	std::vector<double> T = std::vector<double>(Ndim);
+	std::vector<double> P = std::vector<double>(Ndim);
+	std::vector<double> L = std::vector<double>(Ndim);
+	std::vector<double> rho = std::vector<double>(Ndim);
+	std::vector<double> kappa = std::vector<double>(Ndim);
+	std::vector<double> epsilon = std::vector<double>(Ndim);
 	double dM,Pc,Tc,Ps,Ts,Rs,Ls;
 	bool logOut;
 	long numberOfIterate=0;
@@ -81,18 +87,18 @@ public:
 	~Stellar();
 	e_state calc();
 	void setLog(bool);
-	void plot();
+	void plot(){};
 	Phys getPhys(long);
 	void getResult();
 	void setPc(double Pc){this->Pc=Pc;}
-	std::array<double,Ndim> getM(){return M;}
-	std::array<double,Ndim> getR(){return R;}
-	std::array<double,Ndim> getP(){return P;}
-	std::array<double,Ndim> getT(){return T;}
-	std::array<double,Ndim> getL(){return L;}
-	std::array<double,Ndim> getRho(){return rho;}
-	std::array<double,Ndim> getKappa(){return kappa;}
-	std::array<double,Ndim> getEpsilon(){return epsilon;}
+	std::vector<double> getM(){return M;}
+	std::vector<double> getR(){return R;}
+	std::vector<double> getP(){return P;}
+	std::vector<double> getT(){return T;}
+	std::vector<double> getL(){return L;}
+	std::vector<double> getRho(){return rho;}
+	std::vector<double> getKappa(){return kappa;}
+	std::vector<double> getEpsilon(){return epsilon;}
 private:
 	double getPc(){return Pc;};
 	double getTc(){return Tc;};
@@ -114,6 +120,8 @@ private:
 	void setPerturbLs();
 	void setPerturbRs();
 	bool checkConvergence(Phys,Phys);
+	double eps_pp(double rho,double X,double T);
+	double eps_CNO(double rho,double X1,double X_CNO,double T);
 
 	//Utility methodes
 	void outNumberOfIterate();
@@ -124,11 +132,12 @@ private:
 
 class EnergyGen{
 	public:
+		static double PP_RPN(double rho,double X,double T);
+		static double PP_KIP(double rho,double X,double T);
+		static double PP_AML(double rho,double X,double T);
+		static double PP_REDUCED(double rho,double X,double T);
+		static double CNO_KIP(double rho,double X1,double X_CNO,double T);
+	private:
 		EnergyGen(){};
 		~EnergyGen(){};
-		double PP_RPN(double rho,double X,double T);
-		double PP_KIP(double rho,double X,double T);
-		double PP_AML(double rho,double X,double T);
-		double PP_REDUCED(double rho,double X,double T);
-		double CNO_KIP(double rho,double X1,double X_CNO,double T);
 };
