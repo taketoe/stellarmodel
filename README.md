@@ -26,6 +26,8 @@
 	stellar.plot();
  }
 ```
+<img src="https://github.com/taketoe/stellarmodel/blob/master/example/sun.png" width="300px">
+
 ![Sample result](https://github.com/taketoe/stellarmodel/blob/master/example/sun.png)
 ![Sample result](https://github.com/taketoe/stellarmodel/blob/master/example/sun10_100.png)
 ![Sample result](https://github.com/taketoe/stellarmodel/blob/master/example/energy_gen_KIP.png)
