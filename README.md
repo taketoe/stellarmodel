@@ -28,6 +28,7 @@
 ```
 
 ![Sample result](https://github.com/taketoe/stellarmodel/blob/master/example/sun.png)
+![Sample result](https://github.com/taketoe/stellarmodel/blob/master/example/sun10_100.png)
 
 
 ## References
