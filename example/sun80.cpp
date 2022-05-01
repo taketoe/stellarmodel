@@ -39,6 +39,8 @@ int main(){
 		i++;
 	}if(state==notconverge){cout<<" not converge"<<endl;}
 
+	stellar.getResult();
+
 	M = stellar.getM();
 	R = stellar.getR();
 	T = stellar.getT();

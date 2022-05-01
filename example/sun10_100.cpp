@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Stellar.h"
+#include "matplotlibcpp.h"
 
 namespace plt = matplotlibcpp;
 using namespace std;

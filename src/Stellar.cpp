@@ -1,6 +1,6 @@
 
 #include "Stellar.h"
-namespace plt = matplotlibcpp;
+//namespace plt = matplotlibcpp;
 using namespace std;
 using namespace Eigen;
 
