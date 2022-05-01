@@ -7,6 +7,21 @@
 ### 1. matplotlib-cpp
   [Matplotlib-cpp](https://github.com/lava/matplotlib-cpp) pvovides to use matplotlib in C++.
   Installation is easy to place a heade file,matplotlibcpp.h, to your directory. The header file is already includeed this package. You can also use newer one through Github. 
+##### Modification
+  The matplolibcpp.h are modifieded following three line of subplot routine,ll.1646~1648.
+  From:
+```c++
+    PyTuple_SetItem(args, 0, PyFloat_FromDouble(nrows));
+    PyTuple_SetItem(args, 1, PyFloat_FromDouble(ncols));
+    PyTuple_SetItem(args, 2, PyFloat_FromDoubl(plot_number));
+```
+  To:
+```c++
+  PyTuple_SetItem(args, 0, PyLong_FromLong(nrows));
+  PyTuple_SetItem(args, 1, PyLong_FromLong(ncols));
+  PyTuple_SetItem(args, 2, PyLong_FromLong(plot_number));
+```
+
 ### Eigen
   
 ## Sample codes and result
