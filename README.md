@@ -11,7 +11,7 @@
   
 ## Sample codes and result
 ```c++
- #include "Stellar.h"
+#include "Stellar.h"
 #include "matplotlibcpp.h"
 
 namespace plt = matplotlibcpp;
