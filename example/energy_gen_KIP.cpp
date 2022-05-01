@@ -1,6 +1,6 @@
 #include <iostream>
 #include "Stellar.h"
-#include "matplotlibcppgithub.h"
+#include "matplotlibcpp.h"
 
 using namespace std;
 namespace plt = matplotlibcpp;
@@ -57,8 +57,8 @@ int main(){
             {"c", "green"}
     };
 
-	plt::figure();
-	//plt::figure_size(900,700);
+	//plt::figure();
+	plt::figure_size(900,700);
 
 	plt::loglog(T_,e_pp,args_epp);
 	plt::loglog(T_,e_CNO,args_ecno);
