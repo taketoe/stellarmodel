@@ -1,6 +1,5 @@
 
 #include "Stellar.h"
-//namespace plt = matplotlibcpp;
 using namespace std;
 using namespace Eigen;
 
@@ -63,8 +62,8 @@ Stellar::Stellar(double mstarFact,double X,double Y, double Z, double Ts, double
 	setParameters(mstarFact,X,Y,Z,Ts,Ps);
 }
 
-void Stellar::setParameters(double mstarFact,double X,double Y, double Z, double Ts, double Ps){
-	mstar_fact = mstarFact;
+void Stellar::setParameters(double mstar_fact,double X,double Y, double Z, double Ts, double Ps){
+	this->mstar_fact = mstar_fact;
 	this->X=X;
 	this->Y=Y;
 	this->Z=Z;
@@ -85,35 +84,38 @@ void Stellar::setParameters(double mstarFact,double X,double Y, double Z, double
 	//epsilon_CNO=8.24E-24*X*Z;//
 	kappa0=4.3E24*Z*(X+1);
 
-	M[0]=1.E-06*Mstar;        		// Mass of inner cell
-	dM=(Mstar-M[0])/(double(Ndim-1)); 		// Mass of each mass shell
+	Mc=innerMassFract*Mstar;        		// Mass of inner cell
+	dM=(Mstar-Mc)/(double(Ndim-1)); 		// Mass of each mass shell
 //	Pc=1.E15;                 		// Initial guess for central pressure;pp_RPN
 	Pc=1.E16;                 		// Initial guess for central pressure;pp_KIP
-	Tc=1.E7*pow((Mstar/Msun),0.5); 	// Initial guess for centraltemperature
+	Tc=1.E7*pow((Mstar/Msun),0.5); 	// Initial guess for centraltemperature;RPN
+//	Tc=1.6E7*pow((Mstar/Msun),0.5); 	// Initial guess for centraltemperature
 
 	Rs=1.*Rstar;              		// Stellar radius; input value
-	Ls=Lsun*pow((Mstar/Msun),3.); 	// Luminosity; calculated value
+	Ls=Lsun*pow((Mstar/Msun),3.2); 	// Luminosity; calculated value
 
-	//Python result; for calculattion check mstar_fact = 10
-//	Pc=5969527606192897.0;
-//	Tc=33887695.00440481;
-//	Ls=9.730667565983511e+27;
-//	Rs=1221099387.2099824;
 }
 
 Phys Stellar::getPhys(long index){
 	return Phys(M[index],R[index],P[index],T[index],L[index],rho[index],kappa[index],epsilon[index]);
 }
 
+void Stellar::init(){
+	for(int i=1;i<Ndim-1;i++){
+		M[i]=0.;R[i]=0.;P[i]=0.;T[i]=0.;
+		rho[i]=0.;kappa[i]=0;epsilon[i]=0.;
+	}
+}
+
 void Stellar::setInnerBoundary(){
+	M[0]=Mc;
 	P[0]=Pc;
 	T[0]=Tc;
 	rho[0]=P[0]*mu*m_H/(kB*T[0]);
 	R[0]=pow(3.*M[0]/(4.*Pi*rho[0]),1./3.);
-//	epsilon[0]=epsilon_pp*rho[0]*pow(T[0],4.)+epsilon_CNO*rho[0]*pow(T[0]/1.E6,16);
 	epsilon[0]=eps_pp(rho[0],X,T[0])+eps_CNO(rho[0],X,Z,T[0]);
 	L[0]=epsilon[0]*M[0];
-	kappa[0]=kappa0*rho[0]*pow(T[0],-3.5);
+	kappa[0]=opacity(rho[0],T[0]);
 }
 
 void Stellar::setOuterBoundary(){
@@ -123,11 +125,16 @@ void Stellar::setOuterBoundary(){
 	T[Ndim-1]=Ts;
 	P[Ndim-1]=Ps;
 	rho[Ndim-1]=P[Ndim-1]*mu*m_H/(kB*T[Ndim-1]);
-	kappa[Ndim-1]=kappa0*rho[Ndim-1]*pow(T[Ndim-1],-3.5);
-//	epsilon[Ndim-1]=epsilon_pp*rho[Ndim-1]*pow(T[Ndim-1],4.)
-//		+epsilon_CNO*rho[Ndim-1]*pow(T[Ndim-1]/1.E6,16);
+	kappa[Ndim-1]=opacity(rho[Ndim-1],T[Ndim-1]);
 	epsilon[Ndim-1]=eps_pp(rho[Ndim-1],X,T[Ndim-1])
 		+eps_CNO(rho[Ndim-1],X,Z,T[Ndim-1]);
+	if(!isfinite(epsilon[Ndim-1])){
+		cout << " Exception occured: epsilon[Ndim-1] isn't finite" << endl;
+		cout << "eps_pp:" << eps_pp(rho[Ndim-1],X,T[Ndim-1]) << endl;
+		cout << "eps_CNO:" << eps_CNO(rho[Ndim-1],X,Z,T[Ndim-1]) << endl;
+		cout << "rho[Ndim-1]:" << rho[Ndim-1] << " T[Ndim-1]:" << T[Ndim-1] << endl;
+		throw e_state::overflow;
+	}
 
 	//*****************************************
 	// Check the size of the first radial step
@@ -158,25 +165,24 @@ Phys Stellar::shootIn(){
 				T[j] = T[j+1] - (dM*(gamma_c-1.)/gamma_c*
 				T[j+1]/P[j+1]*(P[j+1] - P[j])/dM);
 			}
-			//********************************************************
-			// Check that we don't overshoot so that either the radius 
-			// or luminosity become negative
-			//********************************************************
-			if(R[j] <= 0. or L[j] <= 0.){
+			//
+			// Check overshoot 
+			//
+			if(R[j] <= 0. || L[j] <= 0.){
 				if(logOut){
-					cout<<"R[j] <= 0. or L[j] <= 0." << endl;
+					cout << "Error@shootIn" << endl;
 					outNumberOfIterate();
-					cout << " j:"<<j<<" R[j]:"<<R[j]<<" L[j]:"<<L[j]<<endl;
+					cout << " j:"<<j<<" R[j]:"<<R[j]<<" L[j]:"<<L[j]
+					<< " epislon[j+1]:" << epsilon[j+1] << endl;
+					cout << " estemated Ts:"<< Ts << " Rs:"<< Rs <<endl;
 				}
 				throw e_state::overshoot;
 			}
 			M[j] = M[j+1] - dM;
 			rho[j] = P[j]*mu*m_H/(kB*T[j]);
-//			epsilon[j] = (epsilon_pp*rho[j]*pow(T[j],4.)+
-//					epsilon_CNO*rho[j]*pow((T[j]/1.E6),16));
 			epsilon[j] = eps_pp(rho[j],X,T[j])
 					+eps_CNO(rho[j],X,Z,T[j]);
-			kappa[j] = kappa0*rho[j]*pow(T[j],-3.5);
+			kappa[j]=opacity(rho[j],T[j]);
 	}
 	long mid = long(Ndim/2)-1;
 	checkOverflow(mid);
@@ -204,24 +210,24 @@ Phys Stellar::shootOut(){
 			T[i] = T[i-1] + (gamma_c-1.)/gamma_c*
 					T[i-1]/P[i-1]*(P[i]-P[i-1]);
 		}
-		//******************************************************
-		// Check we don't overshoot the temperature or pressure 
-		// such that one of them becomes negative
-		//******************************************************
-		if(T[i] <= 0. or P[i] <= 0.){
+		//
+		// Check overshoot
+		// 
+		if(T[i] <= 0. || P[i] <= 0.){
 			if(logOut){
-				cout<<"T[i] <= 0. or P[i] <= 0.";
+				cout << "Error@shootOut" << endl;
+				if(nabla_rad < (gamma_c-1.)/gamma_c){cout << " radiative transport" << endl;}
+				else{cout << " convective transport" << endl;}
 				cout << " i:"<<i<<" T[i]:"<<T[i]<<" P[i]:"<<P[i]<<endl;
+				cout << " estemated Tc:"<< Tc << " Pc:"<< Pc <<endl;
 			}
 			throw e_state::overshoot;
 		}
 		M[i] = M[i-1] + dM;
 		rho[i] = P[i]*mu*m_H/(kB*T[i]);
-//		epsilon[i] = (epsilon_pp*rho[i]*pow(T[i],4.)+
-//		    	      epsilon_CNO*rho[i]*pow((T[i]/1.E6),16.));
 		epsilon[i] = eps_pp(rho[i],X,T[i])
 					+eps_CNO(rho[i],X,Z,T[i]);
-		kappa[i] = kappa0*rho[i]*pow(T[i],(-3.5));
+		kappa[i]=opacity(rho[i],T[i]);
 	}
 	long mid = long(Ndim/2)-1;
 	checkOverflow(mid);
@@ -233,20 +239,18 @@ void Stellar::setPerturbPc(){
 	T[0]=Tc;
 	rho[0]=P[0]*mu*m_H/(kB*T[0]);
 	R[0]=pow(3.*M[0]/(4.*Pi*rho[0]),1./3.);
-//	epsilon[0]=epsilon_pp*rho[0]*pow(T[0],4.)+epsilon_CNO*rho[0]*pow(T[0]/1.E6,16);
 	epsilon[0]=eps_pp(rho[0],X,T[0])+eps_CNO(rho[0],X,Z,T[0]);
 	L[0]=epsilon[0]*M[0];
-	kappa[0]=kappa0*rho[0]*pow(T[0],-3.5);	
+	kappa[0]=opacity(rho[0],T[0]);
 }
 void Stellar::setPerturbTc(){
 	P[0]=Pc;
 	T[0]=Tc+pertubRatio*Tc;
 	rho[0]=P[0]*mu*m_H/(kB*T[0]);
 	R[0]=pow(3.*M[0]/(4.*Pi*rho[0]),1./3.);
-//	epsilon[0]=epsilon_pp*rho[0]*pow(T[0],4.)+epsilon_CNO*rho[0]*pow(T[0]/1.E6,16);
 	epsilon[0]=eps_pp(rho[0],X,T[0])+eps_CNO(rho[0],X,Z,T[0]);
 	L[0]=epsilon[0]*M[0];
-	kappa[0]=kappa0*rho[0]*pow(T[0],-3.5);
+	kappa[0]=opacity(rho[0],T[0]);
 }
 
 void Stellar::setPerturbLs(){
@@ -256,9 +260,7 @@ void Stellar::setPerturbLs(){
 	T[Ndim-1]=Ts;
 	P[Ndim-1]=Ps;
 	rho[Ndim-1]=P[Ndim-1]*mu*m_H/(kB*T[Ndim-1]);
-	kappa[Ndim-1]=kappa0*rho[Ndim-1]*pow(T[Ndim-1],-3.5);
-//	epsilon[Ndim-1]=epsilon_pp*rho[Ndim-1]*pow(T[Ndim-1],4.)
-//		+epsilon_CNO*rho[Ndim-1]*pow(T[Ndim-1]/1.E6,16);
+	kappa[Ndim-1]=opacity(rho[Ndim-1],T[Ndim-1]);
 	epsilon[Ndim-1]=eps_pp(rho[Ndim-1],X,T[Ndim-1])
 		+eps_CNO(rho[Ndim-1],X,Z,T[Ndim-1]);
 }
@@ -269,9 +271,7 @@ void Stellar::setPerturbRs(){
 	T[Ndim-1]=Ts;
 	P[Ndim-1]=Ps;
 	rho[Ndim-1]=P[Ndim-1]*mu*m_H/(kB*T[Ndim-1]);
-	kappa[Ndim-1]=kappa0*rho[Ndim-1]*pow(T[Ndim-1],-3.5);
-//	epsilon[Ndim-1]=epsilon_pp*rho[Ndim-1]*pow(T[Ndim-1],4.)
-//		+epsilon_CNO*rho[Ndim-1]*pow(T[Ndim-1]/1.E6,16);
+	kappa[Ndim-1]=opacity(rho[Ndim-1],T[Ndim-1]);
 	epsilon[Ndim-1]=eps_pp(rho[Ndim-1],X,T[Ndim-1])
 		+eps_CNO(rho[Ndim-1],X,Z,T[Ndim-1]);
 }
@@ -297,6 +297,7 @@ e_state Stellar::calc(){
 
 	try{
 		while(!converge && numberOfIterate<maxIterate){
+			init();
 			setOuterBoundary();
 			setInnerBoundary();
 			Phys physMidO=shootOut();
@@ -368,12 +369,38 @@ e_state Stellar::calc(){
 
 				x = A.inverse()*y;
 
+				if(getPc()-double(x[0])<0 ||
+				   getTc()-double(x[1])<0 ||
+				   getLs()-double(x[2])<0 ||
+				   getRs()-double(x[3])<0)
+				{
+					y(0)=0.01*con_fact*physDiff0.getR();
+					y(1)=0.01*con_fact*physDiff0.getP();
+					y(2)=0.01*con_fact*physDiff0.getT();
+					y(3)=0.01*con_fact*physDiff0.getL();
+					x = A.inverse()*y;
+				}
+
+				if(getPc()-double(x[0])<0){
+					cout << "Exception occured:";
+					cout << "non-physical value guessed";
+					cout << " Pc:" << getPc()-double(x[0]) << endl;
+					throw e_state::nonphysical;
+				}
+				if(getTc()-double(x[1])<0){
+					cout << "Exception occured:";
+					cout << "non-physical value guessed";
+					cout << " Tc:" << getTc()-double(x[1]) << endl;
+					throw e_state::nonphysical;
+				}
+
 				setPc(getPc()-double(x[0]));
 				setTc(getTc()-double(x[1]));
 				setLs(getLs()-double(x[2]));
 				setRs(getRs()-double(x[3]));
 
 				//Migrade result
+				init();
 				setOuterBoundary();
 				setInnerBoundary();
 				shootOut();
@@ -388,7 +415,8 @@ e_state Stellar::calc(){
 	}
 	catch(e_state &e){
 		if(logOut){
-			cout << "Exception occured:" << e << endl;
+			if(e == overflow){cout << "Exception occured:overflow" << endl;}
+			if(e == overshoot){cout << "Exception occured:overshoot" << endl;}	
 		}
 		return e;
 	}
@@ -401,7 +429,9 @@ e_state Stellar::calc(){
 bool Stellar::checkConvergence(Phys phys1,Phys phys2){
 	double Rdiff, Pdiff,Tdiff,Ldiff;
 	double Rmidpoint, Pmidpoint,Tmidpoint,Lmidpoint;
-	if(!isfinite(phys1.getT()) == true || !isfinite(phys2.getT())){throw e_state::overflow;}
+	if(!isfinite(phys1.getT()) == true || !isfinite(phys2.getT())){
+		phys1.Out();phys2.Out();
+		throw e_state::overflow;}
 	Rdiff = phys1.getR() - phys2.getR();
 	Pdiff = phys1.getP() - phys2.getP();
 	Tdiff = phys1.getT() - phys2.getT();
@@ -434,7 +464,7 @@ void Stellar::setLog(bool sw){logOut=sw;}
 
 
 void Stellar::getResult(){
-	Phys physSurface = getPhys(Ndim-2);
+	Phys physSurface = getPhys(Ndim-1);
 	Phys physCenter  = getPhys(0);
 
 	cout << "Stellar Center" << endl;
@@ -442,57 +472,7 @@ void Stellar::getResult(){
 	cout << "Stellar Surface" << endl;
 	physSurface.Out(); 
 }
-/*
-void Stellar::plot(){
-	std::vector<double> Mmodel,Rmodel,Pmodel,Tmodel,Lmodel,rhomodel;
 
-	plt::figure_size(1000,600);
-	plt::subplot(2,3,1);
-	plt::plot(M,T,"r-");
-	plt::ylim(*min_element(T.begin(),T.end()),*max_element(T.begin(),T.end()));
-	plt::title("Temperature vs M");
-	plt::xlabel("M [kg]");
-	plt::ylabel("T [K]");
-	
-	plt::subplot(2,3,2);
-	plt::plot(M,P,"r-");
-	plt::ylim(*min_element(P.begin(),P.end()),*max_element(P.begin(),P.end()));
-	plt::title("Pressure vs M");
-	plt::xlabel("M [kg]");
-	plt::ylabel("P [N/m$^2$]");
-
-	plt::subplot(2,3,3);
-	plt::plot(M,rho,"r-");
-	plt::ylim(*min_element(rho.begin(),rho.end()),*max_element(rho.begin(),rho.end()));
-	plt::title("Density vs M");
-	plt::xlabel("M [kg]");
-	plt::ylabel("$\\rho \\rm [kg/m^3]$");
-
-	plt::subplot(2,3,4);
-	plt::plot(M,L,"r-");
-	plt::ylim(0.,1.1*(*max_element(L.begin(),L.end())));
-	plt::title("Luminosity vs M");
-	plt::xlabel("M [kg]");
-	plt::ylabel("$L \\rm [W]$");
-
-	plt::subplot(2,3,5);
-	plt::plot(M,R,"r-");
-	plt::ylim(*min_element(R.begin(),R.end()),*max_element(R.begin(),R.end()));
-	plt::title("Radius vs M");
-	plt::xlabel("M [kg]");
-	plt::ylabel("$R \\rm[m]$");
-
-	plt::subplot(2,3,6);
-	plt::plot(R,T,"r-");
-	plt::ylim(*min_element(T.begin(),T.end()),*max_element(T.begin(),T.end()));
-	plt::title("Temperature vs Radius");
-	plt::ylabel("T [K]");
-	plt::xlabel("$R \\rm[m]$");
-	plt::tight_layout();
-	//plt::ion(); //
-	plt::show();
-}
-*/
 void Stellar::outNumberOfIterate(){
 		cout << " number of Iterate:" <<  numberOfIterate << endl;
 }
@@ -505,11 +485,8 @@ void Stellar::outBoundary(){
 }
 
 void Stellar::outDifference(Eigen::MatrixXd A,Eigen::VectorXd x,Eigen::VectorXd y){
-			// cout << " x[0]:" << x[0];
-			// cout << " x[1]:" << x[1];
-			// cout << " x[2]:" << x[2];
-			// cout << " x[3]:" << x[3] << endl;
 			cout << "A:\n" << A << endl;
+			cout << "A^-1:\n" << A.inverse() << endl;
 			cout << "x:" << x.transpose() << endl;
 			cout << "y:" << y.transpose() << endl;
 }
@@ -518,20 +495,38 @@ void Stellar::checkOverflow(long index){
 	if(!isfinite(T[index])){throw e_state::overflow;}
 }
 
-	double Stellar::eps_pp(double rho,double X,double T){
-//		return(EnergyGen::PP_KIP(rho,X,T));
-		return(epsilon_pp*rho*pow(T,4.));
+double Stellar::eps_pp(double rho,double X,double T){
+	//return(EnergyGen::PP_KIP(rho,X,T));
+	//Ref.R.Kippenhahn,p.165
+	//temperature region are sliced.
+	// 
+	double my_factor = 1.0;
+	if(5.E6>T){
+		return(0.);
+	}else{
+		return(EnergyGen::PP_KIP(rho,X,T)*my_factor);
 	}
+}
 
-	double Stellar::eps_CNO(double rho,double X1,double X_CNO,double T){
-//		return(EnergyGen::CNO_KIP(rho,X1,X_CNO,T));
-//		double e_CNO = epsilon_CNO*rho*pow(T/1.E6,16);
-		return(epsilon_CNO*rho*pow(T/1.E6,16));
+double Stellar::eps_CNO(double rho,double X1,double X_CNO,double T){
+	double my_factor = 1.0;
+	if(1.5E7>T){
+		return(0.);
+	}else{
+		return(EnergyGen::CNO_KIP(rho,X1,X_CNO,T)*my_factor);
 	}
+}
+
+double Stellar::opacity(double rho,double T){
+	double my_factor = 1.;
+	return(Opacity::KramApprox(rho,X,Z,T)*my_factor);
+}
 
 double EnergyGen::PP_RPN(double rho,double X,double T){
 	//Ref. R.P.Nelson,https://2019.qmplus.qmul.ac.uk/course/;
 	//SPA7023U - STELLAR STRUCTURE AND EVOLUTION
+	// RPN and KIP are differed on low temperature.
+	// RPN is survive at low temperature.
 	//rho:[kg/m^3]
 	//X:Hydrogen fraction[-]
 	//T:Temperature[K]
