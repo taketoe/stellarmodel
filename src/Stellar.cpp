@@ -295,136 +295,166 @@ e_state Stellar::calc(){
 	Eigen::MatrixXd A(4,4);
 	Eigen::VectorXd x(4),y(4);
 
-	try{
-		while(!converge && numberOfIterate<maxIterate){
-			init();
-			setOuterBoundary();
-			setInnerBoundary();
-			Phys physMidO=shootOut();
-		//	if(physMidO.state == overshoot){return e_state::overshoot;}
-			Phys physMidI=shootIn();
-			converge = checkConvergence(physMidI,physMidO);
-			if(!converge){
-				setPerturbPc();
-				physMidOp1=shootOut();
-				setPerturbTc();
-				physMidOp2=shootOut();
-				setPerturbLs();
-				physMidIp1=shootIn();
-				setPerturbRs();
-				physMidIp2=shootIn();
-
-				physDiff0 = physMidO - physMidI;
-				physDiff1 = physMidOp1 - physMidI;
-				physDiff2 = physMidOp2 - physMidI;
-				physDiff3 = physMidO - physMidIp1;
-				physDiff4 = physMidO - physMidIp2;
-
-				phys_dPc = physDiff1 - physDiff0;
-				phys_dTc = physDiff2 - physDiff0;
-				phys_dLs = physDiff3 - physDiff0;
-				phys_dRs = physDiff4 - physDiff0;
-
-				d_deltaR_dPc = phys_dPc.getR() / (pertubRatio*getPc());
-				d_deltaR_dTc = phys_dTc.getR() / (pertubRatio*getTc());
-				d_deltaR_dLs = phys_dLs.getR() / (pertubRatio*getLs());
-				d_deltaR_dRs = phys_dRs.getR() / (pertubRatio*getRs());
-
-				d_deltaP_dPc = phys_dPc.getP() / (pertubRatio*getPc());
-				d_deltaP_dTc = phys_dTc.getP() / (pertubRatio*getTc());
-				d_deltaP_dLs = phys_dLs.getP() / (pertubRatio*getLs());
-				d_deltaP_dRs = phys_dRs.getP() / (pertubRatio*getRs());
-
-				d_deltaT_dPc = phys_dPc.getT() / (pertubRatio*getPc());
-				d_deltaT_dTc = phys_dTc.getT() / (pertubRatio*getTc());
-				d_deltaT_dLs = phys_dLs.getT() / (pertubRatio*getLs());
-				d_deltaT_dRs = phys_dRs.getT() / (pertubRatio*getRs());
-
-				d_deltaL_dPc = phys_dPc.getL() / (pertubRatio*getPc());
-				d_deltaL_dTc = phys_dTc.getL() / (pertubRatio*getTc());
-				d_deltaL_dLs = phys_dLs.getL() / (pertubRatio*getLs());
-				d_deltaL_dRs = phys_dRs.getL() / (pertubRatio*getRs());
-
-				A(0,0)=d_deltaR_dPc;
-				A(0,1)=d_deltaR_dTc;
-				A(0,2)=d_deltaR_dLs;
-				A(0,3)=d_deltaR_dRs;
-				A(1,0)=d_deltaP_dPc;
-				A(1,1)=d_deltaP_dTc;
-				A(1,2)=d_deltaP_dLs;
-				A(1,3)=d_deltaP_dRs;
-				A(2,0)=d_deltaT_dPc;
-				A(2,1)=d_deltaT_dTc;
-				A(2,2)=d_deltaT_dLs;
-				A(2,3)=d_deltaT_dRs;
-				A(3,0)=d_deltaL_dPc;
-				A(3,1)=d_deltaL_dTc;
-				A(3,2)=d_deltaL_dLs;
-				A(3,3)=d_deltaL_dRs;
-
-				y(0)=con_fact*physDiff0.getR();
-				y(1)=con_fact*physDiff0.getP();
-				y(2)=con_fact*physDiff0.getT();
-				y(3)=con_fact*physDiff0.getL();
-
-				x = A.inverse()*y;
-
-				if(getPc()-double(x[0])<0 ||
-				   getTc()-double(x[1])<0 ||
-				   getLs()-double(x[2])<0 ||
-				   getRs()-double(x[3])<0)
-				{
-					y(0)=0.01*con_fact*physDiff0.getR();
-					y(1)=0.01*con_fact*physDiff0.getP();
-					y(2)=0.01*con_fact*physDiff0.getT();
-					y(3)=0.01*con_fact*physDiff0.getL();
-					x = A.inverse()*y;
-				}
-
-				if(getPc()-double(x[0])<0){
-					cout << "Exception occured:";
-					cout << "non-physical value guessed";
-					cout << " Pc:" << getPc()-double(x[0]) << endl;
-					throw e_state::nonphysical;
-				}
-				if(getTc()-double(x[1])<0){
-					cout << "Exception occured:";
-					cout << "non-physical value guessed";
-					cout << " Tc:" << getTc()-double(x[1]) << endl;
-					throw e_state::nonphysical;
-				}
-
-				setPc(getPc()-double(x[0]));
-				setTc(getTc()-double(x[1]));
-				setLs(getLs()-double(x[2]));
-				setRs(getRs()-double(x[3]));
-
-				//Migrade result
+	double Ps = getPs();
+	double Ps_min = Ps;
+	double Ps_max = Ps*10.;
+	double dPs = Ps;
+	int i=0;
+	Ps=Ps_min;
+	while((!converge) && Ps<=Ps_max){
+		cout <<"i:"<<i<<" Ps:" << Ps << endl;
+		setPs(Ps);
+		try{
+			while(!converge && numberOfIterate<maxIterate){
 				init();
 				setOuterBoundary();
 				setInnerBoundary();
-				shootOut();
-				shootIn();
+				Phys physMidO=shootOut();
+			//	if(physMidO.state == overshoot){return e_state::overshoot;}
+				Phys physMidI=shootIn();
+				converge = checkConvergence(physMidI,physMidO);
+				if(!converge){
+					setPerturbPc();
+					physMidOp1=shootOut();
+					setPerturbTc();
+					physMidOp2=shootOut();
+					setPerturbLs();
+					physMidIp1=shootIn();
+					setPerturbRs();
+					physMidIp2=shootIn();
 
-				//outDifference(A,x,y);
+					x = guessNextPoint(physMidO,physMidI,physMidOp1,physMidOp2,physMidIp1,physMidIp2);
+
+					setPc(getPc()-double(x[0]));
+					setTc(getTc()-double(x[1]));
+					setLs(getLs()-double(x[2]));
+					setRs(getRs()-double(x[3]));
+
+					//Migrade result
+					init();
+					setOuterBoundary();
+					setInnerBoundary();
+					shootOut();
+					shootIn();
+
+					//outDifference(A,x,y);
+				}
+				//outNumberOfIterate();
+				//outBoundary();		
+				numberOfIterate++;
 			}
-			//outNumberOfIterate();
-			//outBoundary();		
-			numberOfIterate++;
 		}
-	}
-	catch(e_state &e){
-		if(logOut){
-			if(e == overflow){cout << "Exception occured:overflow" << endl;}
-			if(e == overshoot){cout << "Exception occured:overshoot" << endl;}	
+		catch(e_state &e){
+			if(logOut){
+				if(e == overflow){cout << "Exception occured:overflow" << endl;}
+				if(e == overshoot){cout << "Exception occured:overshoot" << endl;}	
+			}
 		}
-		return e;
+		Ps+=dPs;
+		i++;
 	}
 	if(converge == true){
+//		cout <<"converged"<< endl;
 		return(e_state::converge);
 	}
 	return(e_state::notconverge);
 }
+
+Eigen::VectorXd Stellar::guessNextPoint(Phys physMidO,Phys physMidI,Phys physMidOp1,Phys physMidOp2,Phys physMidIp1,Phys physMidIp2){
+	double Rdiff1,Pdiff1,Tdiff1,Ldiff1;
+	double Rdiff2,Pdiff2,Tdiff2,Ldiff2;
+	double Rdiff3,Pdiff3,Tdiff3,Ldiff3;
+	double Rdiff4,Pdiff4,Tdiff4,Ldiff4;
+	double d_deltaR_dPc,d_deltaP_dPc,d_deltaT_dPc,d_deltaL_dPc;
+	double d_deltaR_dTc,d_deltaP_dTc,d_deltaT_dTc,d_deltaL_dTc;
+	double d_deltaR_dLs,d_deltaP_dLs,d_deltaT_dLs,d_deltaL_dLs;
+	double d_deltaR_dRs,d_deltaP_dRs,d_deltaT_dRs,d_deltaL_dRs;
+	Phys physDiff0,physDiff1,physDiff2,physDiff3,physDiff4;
+	Phys phys_dPc,phys_dTc,phys_dRs,phys_dLs;
+	Eigen::MatrixXd A(4,4);
+	Eigen::VectorXd x(4),y(4);
+
+	physDiff0 = physMidO - physMidI;
+	physDiff1 = physMidOp1 - physMidI;
+	physDiff2 = physMidOp2 - physMidI;
+	physDiff3 = physMidO - physMidIp1;
+	physDiff4 = physMidO - physMidIp2;
+
+	phys_dPc = physDiff1 - physDiff0;
+	phys_dTc = physDiff2 - physDiff0;
+	phys_dLs = physDiff3 - physDiff0;
+	phys_dRs = physDiff4 - physDiff0;
+
+	d_deltaR_dPc = phys_dPc.getR() / (pertubRatio*getPc());
+	d_deltaR_dTc = phys_dTc.getR() / (pertubRatio*getTc());
+	d_deltaR_dLs = phys_dLs.getR() / (pertubRatio*getLs());
+	d_deltaR_dRs = phys_dRs.getR() / (pertubRatio*getRs());
+
+	d_deltaP_dPc = phys_dPc.getP() / (pertubRatio*getPc());
+	d_deltaP_dTc = phys_dTc.getP() / (pertubRatio*getTc());
+	d_deltaP_dLs = phys_dLs.getP() / (pertubRatio*getLs());
+	d_deltaP_dRs = phys_dRs.getP() / (pertubRatio*getRs());
+
+	d_deltaT_dPc = phys_dPc.getT() / (pertubRatio*getPc());
+	d_deltaT_dTc = phys_dTc.getT() / (pertubRatio*getTc());
+	d_deltaT_dLs = phys_dLs.getT() / (pertubRatio*getLs());
+	d_deltaT_dRs = phys_dRs.getT() / (pertubRatio*getRs());
+
+	d_deltaL_dPc = phys_dPc.getL() / (pertubRatio*getPc());
+	d_deltaL_dTc = phys_dTc.getL() / (pertubRatio*getTc());
+	d_deltaL_dLs = phys_dLs.getL() / (pertubRatio*getLs());
+	d_deltaL_dRs = phys_dRs.getL() / (pertubRatio*getRs());
+
+	A(0,0)=d_deltaR_dPc;
+	A(0,1)=d_deltaR_dTc;
+	A(0,2)=d_deltaR_dLs;
+	A(0,3)=d_deltaR_dRs;
+	A(1,0)=d_deltaP_dPc;
+	A(1,1)=d_deltaP_dTc;
+	A(1,2)=d_deltaP_dLs;
+	A(1,3)=d_deltaP_dRs;
+	A(2,0)=d_deltaT_dPc;
+	A(2,1)=d_deltaT_dTc;
+	A(2,2)=d_deltaT_dLs;
+	A(2,3)=d_deltaT_dRs;
+	A(3,0)=d_deltaL_dPc;
+	A(3,1)=d_deltaL_dTc;
+	A(3,2)=d_deltaL_dLs;
+	A(3,3)=d_deltaL_dRs;
+
+	y(0)=con_fact*physDiff0.getR();
+	y(1)=con_fact*physDiff0.getP();
+	y(2)=con_fact*physDiff0.getT();
+	y(3)=con_fact*physDiff0.getL();
+
+	x = A.inverse()*y;
+
+	if(getPc()-double(x[0])<0 ||
+		getTc()-double(x[1])<0 ||
+		getLs()-double(x[2])<0 ||
+		getRs()-double(x[3])<0)
+	{
+		y(0)=0.01*con_fact*physDiff0.getR();
+		y(1)=0.01*con_fact*physDiff0.getP();
+		y(2)=0.01*con_fact*physDiff0.getT();
+		y(3)=0.01*con_fact*physDiff0.getL();
+		x = A.inverse()*y;
+	}
+
+	if(getPc()-double(x[0])<0){
+		cout << "Exception occured:";
+		cout << "non-physical value guessed";
+		cout << " Pc:" << getPc()-double(x[0]) << endl;
+		throw e_state::nonphysical;
+	}
+	if(getTc()-double(x[1])<0){
+		cout << "Exception occured:";
+		cout << "non-physical value guessed";
+		cout << " Tc:" << getTc()-double(x[1]) << endl;
+		throw e_state::nonphysical;
+	}
+	return x;
+};
 
 bool Stellar::checkConvergence(Phys phys1,Phys phys2){
 	double Rdiff, Pdiff,Tdiff,Ldiff;

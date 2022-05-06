@@ -86,7 +86,8 @@ public:
 	Stellar(double msun,double X,double Y,double Z,double Ts,double Ps);
 	~Stellar();
 	e_state calc();
-	e_state calcSO();
+//	e_state calcSO();
+	Eigen::VectorXd guessNextPoint(Phys,Phys,Phys,Phys,Phys,Phys);
 	void setLog(bool);
 	void plot(){};
 	Phys getPhys(long);
@@ -110,7 +111,8 @@ private:
 	double getTs(){return Ts;};
 	double getRs(){return Rs;};
 	double getLs(){return Ls;};
-
+	void setPs(double Ps){this->Ps = Ps;}
+	
 	void init();
 	void setParameters(double msun,double X,double Y, double Z,double Ts,double Ps);
 	void setInnerBoundary();
