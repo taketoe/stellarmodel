@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <math.h>
 #include <array>
+#include <string>
 
 #include <Eigen/Dense>
 #include <Eigen/LU>
@@ -21,7 +22,7 @@ const double Lsun=3.828E26;   // Solar luminosity [J/s]
 const double Teff_sun=5778;		  // Solar efective temperature [K]
 const double con_fact=0.3;	// feedback ratio
 
-const double tolerance=5.E-3;// convergence criteria
+const double tolerance=5.E-5;// convergence criteria
 const long Ndim = 100000;// Number of grid points
 
 const long maxIterate = 2000;
@@ -59,6 +60,7 @@ public:
 	Phys(double M,double R,double P,double T,double L,double Rho,double Kappa,double Epsilon);
 	~Phys();
 	void Out();
+	std::string outStr();
 };
 
 
@@ -98,21 +100,35 @@ public:
 	void setLs(double Ls){this->Ls=Ls;};
 	double getPc(){return Pc;};
 	double getTc(){return Tc;};
-	std::vector<double> getM(){return M;}
-	std::vector<double> getR(){return R;}
-	std::vector<double> getP(){return P;}
-	std::vector<double> getT(){return T;}
-	std::vector<double> getL(){return L;}
+	double getPs(){return Ps;};
+	std::vector<double> getMass(){return M;}
+	std::vector<double> getRadius(){return R;}
+	std::vector<double> getPress(){return P;}
+	std::vector<double> getTemp(){return T;}
+	std::vector<double> getLumino(){return L;}
 	std::vector<double> getRho(){return rho;}
 	std::vector<double> getKappa(){return kappa;}
 	std::vector<double> getEpsilon(){return epsilon;}
+
+	std::vector<double> getMassNormaSun(){return(divide(M,Msun));}
+	std::vector<double> getMassNormaSrface(){return(divide(M,M[Ndim-1]));}
+	std::vector<double> getRadiusNormaSun(){return(divide(R,Rsun));}
+	std::vector<double> getRadiusNormaSurface(){return(divide(R,R[Ndim-1]));}
+	std::vector<double> getLuminoNormaSun(){return(divide(L,Lsun));}
+	std::vector<double> getLuminoNormaSurface(){return(divide(L,L[Ndim-1]));}
+	std::vector<double> getRhoNormaSurface(){return(log10(rho));}
+	std::vector<double> getTempT6(){return(divide(T,1.E6));}
+	std::vector<double> getRhoLog(){return(log10(rho));}
+	std::vector<double> getTempLog(){return(log10(T));}
+	std::vector<double> getEpsilonLog(){return(log10(epsilon));}
+
 private:
-	double getPs(){return Ps;};
+//	double getPs(){return Ps;};
 	double getTs(){return Ts;};
 	double getRs(){return Rs;};
 	double getLs(){return Ls;};
 	void setPs(double Ps){this->Ps = Ps;}
-	
+
 	void init();
 	void setParameters(double msun,double X,double Y, double Z,double Ts,double Ps);
 	void setInnerBoundary();
@@ -132,6 +148,8 @@ private:
 	void outBoundary();
 	void outDifference(Eigen::MatrixXd,Eigen::VectorXd,Eigen::VectorXd);
 	void checkOverflow(long);
+	std::vector<double> divide(std::vector<double> data, double divisor);
+	std::vector<double> log10(std::vector<double> data);
 };
 
 class EnergyGen{

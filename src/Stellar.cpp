@@ -1,5 +1,7 @@
 
 #include "Stellar.h"
+#include <string>
+
 using namespace std;
 using namespace Eigen;
 
@@ -46,6 +48,19 @@ void Phys::Out(){
 	cout << " rho=" << getRho();
 	cout << " kappa=" << getKappa();
 	cout << " epsilon=" << getEpsilon() << endl;
+}
+
+string Phys::outStr(){
+	stringstream sstr;
+	sstr << "M=" << getM();
+	sstr << " R=" << getR();
+	sstr << " P=" << getP();
+	sstr << " T=" << getT();
+	sstr << " L=" << getL()<<endl;
+	sstr << " rho=" << getRho();
+	sstr << " kappa=" << getKappa();
+	sstr << " epsilon=" << getEpsilon() << endl;
+	return (sstr.str());
 }
 
 Stellar::Stellar():logOut(false){
@@ -129,11 +144,14 @@ void Stellar::setOuterBoundary(){
 	epsilon[Ndim-1]=eps_pp(rho[Ndim-1],X,T[Ndim-1])
 		+eps_CNO(rho[Ndim-1],X,Z,T[Ndim-1]);
 	if(!isfinite(epsilon[Ndim-1])){
-		cout << " Exception occured: epsilon[Ndim-1] isn't finite" << endl;
-		cout << "eps_pp:" << eps_pp(rho[Ndim-1],X,T[Ndim-1]) << endl;
-		cout << "eps_CNO:" << eps_CNO(rho[Ndim-1],X,Z,T[Ndim-1]) << endl;
-		cout << "rho[Ndim-1]:" << rho[Ndim-1] << " T[Ndim-1]:" << T[Ndim-1] << endl;
-		throw e_state::overflow;
+		// cout << " Exception occured: epsilon[Ndim-1] isn't finite" << endl;
+		// cout << "eps_pp:" << eps_pp(rho[Ndim-1],X,T[Ndim-1]) << endl;
+		// cout << "eps_CNO:" << eps_CNO(rho[Ndim-1],X,Z,T[Ndim-1]) << endl;
+		// cout << "rho[Ndim-1]:" << rho[Ndim-1] << " T[Ndim-1]:" << T[Ndim-1] << endl;
+		// throw e_state::overflow;
+		string str = "in setOuterBoundary : epsilon[Ndim-1] isn't finite";
+		throw std::range_error(str);
+
 	}
 
 	//*****************************************
@@ -142,11 +160,13 @@ void Stellar::setOuterBoundary(){
 	//*****************************************
 	double dr_Rstar = dM/(4.*Pi*pow(R[Ndim-1],3)*rho[Ndim-1]);
 	if(dr_Rstar/Rs > 1.E-02){
-		if(logOut){
-			cout << "Ending run since radial step size is too large"<<endl;
-			cout << "dr_Rstar/Rs="<< dr_Rstar/Rs << " " << dr_Rstar << "  " << Rs<< endl;
-		}
-		throw e_state::steptoolarge;
+		// if(logOut){
+		// 	cout << "Ending run since radial step size is too large"<<endl;
+		// 	cout << "dr_Rstar/Rs="<< dr_Rstar/Rs << " " << dr_Rstar << "  " << Rs<< endl;
+		// }
+		// throw e_state::steptoolarge;
+		string str = "in setOuterBoundary : radial step size is too large";
+		throw std::range_error(str);
 	}
 }
 
@@ -169,14 +189,21 @@ Phys Stellar::shootIn(){
 			// Check overshoot 
 			//
 			if(R[j] <= 0. || L[j] <= 0.){
-				if(logOut){
-					cout << "Error@shootIn" << endl;
-					outNumberOfIterate();
-					cout << " j:"<<j<<" R[j]:"<<R[j]<<" L[j]:"<<L[j]
-					<< " epislon[j+1]:" << epsilon[j+1] << endl;
-					cout << " estemated Ts:"<< Ts << " Rs:"<< Rs <<endl;
-				}
-				throw e_state::overshoot;
+				// if(logOut){
+				// 	cout << "Error@shootIn" << endl;
+				// 	outNumberOfIterate();
+				// 	cout << " j:"<<j<<" R[j]:"<<R[j]<<" L[j]:"<<L[j]
+				// 	<< " epislon[j+1]:" << epsilon[j+1] << endl;
+				// 	cout << " estemated Ts:"<< Ts << " Rs:"<< Rs <<endl;
+				// }
+				// throw e_state::overshoot;
+				stringstream ss;
+				ss << scientific << setprecision(4);
+				ss <<"in shootIn:non-physical value "<<endl;
+				ss <<" R["<<j<<"]:"<<R[j]<<" L["<<j<<"]:"<<L[j];
+				ss <<" epislon["<<j+1<<"]:"<<epsilon[j+1]<<endl;
+				ss <<" Ps:"<<Ps<<" Rs:"<<Rs<<" Ls:"<<Ls; 
+				throw std::range_error(ss.str());
 			}
 			M[j] = M[j+1] - dM;
 			rho[j] = P[j]*mu*m_H/(kB*T[j]);
@@ -214,14 +241,26 @@ Phys Stellar::shootOut(){
 		// Check overshoot
 		// 
 		if(T[i] <= 0. || P[i] <= 0.){
-			if(logOut){
-				cout << "Error@shootOut" << endl;
-				if(nabla_rad < (gamma_c-1.)/gamma_c){cout << " radiative transport" << endl;}
-				else{cout << " convective transport" << endl;}
-				cout << " i:"<<i<<" T[i]:"<<T[i]<<" P[i]:"<<P[i]<<endl;
-				cout << " estemated Tc:"<< Tc << " Pc:"<< Pc <<endl;
-			}
-			throw e_state::overshoot;
+			// if(logOut){
+			// 	cout << "Error@shootOut" << endl;
+			// 	if(nabla_rad < (gamma_c-1.)/gamma_c){cout << " radiative transport" << endl;}
+			// 	else{cout << " convective transport" << endl;}
+			// 	cout << " i:"<<i<<" T[i]:"<<T[i]<<" P[i]:"<<P[i]<<endl;
+			// 	cout << " estemated Tc:"<< Tc << " Pc:"<< Pc <<endl;
+			// }
+			//throw e_state::overshoot;
+//				cout << "Error@shootOut" << endl;
+				stringstream ss;
+				ss << scientific << setprecision(4);
+				ss << "in shootOut:non-physical vale: ";
+				if(nabla_rad < (gamma_c-1.)/gamma_c){
+					ss<< "radiative transport: "<<endl;}
+				else{
+					ss<<"convective transport: "<<endl;
+				}
+				ss<<" T["<<i<<"]:"<<T[i]<<" P["<<i<<"]:"<<P[i]<<endl;
+				ss<<" Ps:"<<Ps<<" Tc:"<<Tc<<" Pc:"<<Pc;
+				throw std::range_error(ss.str());
 		}
 		M[i] = M[i-1] + dM;
 		rho[i] = P[i]*mu*m_H/(kB*T[i]);
@@ -280,7 +319,7 @@ Stellar::~Stellar(){
 }
 
 e_state Stellar::calc(){
-	double Rdiff1,Pdiff1,Tdiff1,Ldiff1;
+/*	double Rdiff1,Pdiff1,Tdiff1,Ldiff1;
 	double Rdiff2,Pdiff2,Tdiff2,Ldiff2;
 	double Rdiff3,Pdiff3,Tdiff3,Ldiff3;
 	double Rdiff4,Pdiff4,Tdiff4,Ldiff4;
@@ -288,21 +327,23 @@ e_state Stellar::calc(){
 	double d_deltaR_dTc,d_deltaP_dTc,d_deltaT_dTc,d_deltaL_dTc;
 	double d_deltaR_dLs,d_deltaP_dLs,d_deltaT_dLs,d_deltaL_dLs;
 	double d_deltaR_dRs,d_deltaP_dRs,d_deltaT_dRs,d_deltaL_dRs;
+	*/
 	Phys physMidOp1,physMidOp2,physMidIp1,physMidIp2;
-	Phys physDiff0,physDiff1,physDiff2,physDiff3,physDiff4;
+	/*Phys physDiff0,physDiff1,physDiff2,physDiff3,physDiff4;
 	Phys phys_dPc,phys_dTc,phys_dRs,phys_dLs;
+	*/
 	bool converge = false;
 	Eigen::MatrixXd A(4,4);
 	Eigen::VectorXd x(4),y(4);
 
 	double Ps = getPs();
 	double Ps_min = Ps;
-	double Ps_max = Ps*10.;
-	double dPs = Ps;
+	double Ps_max = Ps*2.;
+	double dPs = Ps/10.;
 	int i=0;
 	Ps=Ps_min;
 	while((!converge) && Ps<=Ps_max){
-		cout <<"i:"<<i<<" Ps:" << Ps << endl;
+//		cout <<"i:"<<i<<" Ps:" << Ps << endl;
 		setPs(Ps);
 		try{
 			while(!converge && numberOfIterate<maxIterate){
@@ -349,6 +390,9 @@ e_state Stellar::calc(){
 				if(e == overflow){cout << "Exception occured:overflow" << endl;}
 				if(e == overshoot){cout << "Exception occured:overshoot" << endl;}	
 			}
+		}
+		catch(std::range_error &e){
+			cout << e.what() << endl;
 		}
 		Ps+=dPs;
 		i++;
@@ -442,16 +486,26 @@ Eigen::VectorXd Stellar::guessNextPoint(Phys physMidO,Phys physMidI,Phys physMid
 	}
 
 	if(getPc()-double(x[0])<0){
-		cout << "Exception occured:";
-		cout << "non-physical value guessed";
-		cout << " Pc:" << getPc()-double(x[0]) << endl;
-		throw e_state::nonphysical;
+		// cout << "Exception occured:";
+		// cout << "non-physical value guessed";
+		// cout << " Pc:" << getPc()-double(x[0]) << endl;
+		// throw e_state::nonphysical;
+		stringstream ss;
+		ss<<scientific<<setprecision(5);
+		ss<<"in guessNextPoint : non-physical value guessed";	
+		ss<<" Pc:"<< getPc()-double(x[0]);
+		throw std::range_error(ss.str());
 	}
 	if(getTc()-double(x[1])<0){
-		cout << "Exception occured:";
-		cout << "non-physical value guessed";
-		cout << " Tc:" << getTc()-double(x[1]) << endl;
-		throw e_state::nonphysical;
+		// cout << "Exception occured:";
+		// cout << "non-physical value guessed";
+		// cout << " Tc:" << getTc()-double(x[1]) << endl;
+		// throw e_state::nonphysical;
+		stringstream ss;
+		ss<<scientific<<setprecision(5);
+		ss<<"in guessNextPoint : non-physical value guessed";	
+		ss<<" Tc:"<< getTc()-double(x[1]);
+		throw std::range_error(ss.str());
 	}
 	return x;
 };
@@ -461,7 +515,9 @@ bool Stellar::checkConvergence(Phys phys1,Phys phys2){
 	double Rmidpoint, Pmidpoint,Tmidpoint,Lmidpoint;
 	if(!isfinite(phys1.getT()) == true || !isfinite(phys2.getT())){
 		phys1.Out();phys2.Out();
-		throw e_state::overflow;}
+		stringstream ss;
+		ss<< phys1.outStr()<<phys2.outStr();
+		throw std::overflow_error(ss.str());}
 	Rdiff = phys1.getR() - phys2.getR();
 	Pdiff = phys1.getP() - phys2.getP();
 	Tdiff = phys1.getT() - phys2.getT();
@@ -522,7 +578,7 @@ void Stellar::outDifference(Eigen::MatrixXd A,Eigen::VectorXd x,Eigen::VectorXd 
 }
 
 void Stellar::checkOverflow(long index){
-	if(!isfinite(T[index])){throw e_state::overflow;}
+	if(!isfinite(T[index])){throw std::range_error("T["+to_string(index)+"] is not finite");}
 }
 
 double Stellar::eps_pp(double rho,double X,double T){
@@ -551,6 +607,23 @@ double Stellar::opacity(double rho,double T){
 	double my_factor = 1.;
 	return(Opacity::KramApprox(rho,X,Z,T)*my_factor);
 }
+
+vector<double> Stellar::divide(vector<double> data, double divisor){
+	vector<double> r_data;
+	for(auto itr = data.begin(); itr != data.end(); ++itr){
+		r_data.push_back((*itr)/divisor);
+	}
+	return r_data;
+}
+
+std::vector<double> Stellar::log10(vector<double> data){
+	vector<double> r_data;
+	for(auto itr = data.begin(); itr != data.end(); ++itr){
+		r_data.push_back(log10f(*itr));
+	}
+	return r_data;
+}
+
 
 double EnergyGen::PP_RPN(double rho,double X,double T){
 	//Ref. R.P.Nelson,https://2019.qmplus.qmul.ac.uk/course/;
